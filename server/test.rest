@@ -1,0 +1,207 @@
+@baseUrl=http://localhost:5000
+@adminEmail=admin@hkids.com
+@adminPassword=admin123
+@editorEmail=editor@hkids.com
+@editorPassword=Editor1234
+
+### Health Check
+GET {{baseUrl}}/health
+Accept: application/json
+
+### Public Books (no auth, published only)
+GET {{baseUrl}}/api/public/books
+Accept: application/json
+
+### Login as Admin
+# @name adminLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### Current User (me)
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{adminLogin.response.body.data.token}}
+Accept: application/json
+
+### Logout (JWT header POC)
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer {{adminLogin.response.body.data.token}}
+Accept: application/json
+
+### Register Editor (POC)
+# @name registerEditor
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{editorEmail}}",
+  "password": "{{editorPassword}}",
+  "name": "Editor User",
+  "role": "editor"
+}
+
+### Login as Editor
+# @name editorLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{editorEmail}}",
+  "password": "{{editorPassword}}"
+}
+
+### Editor Creates Book (allowed)
+# @name editorCreateBook
+POST {{baseUrl}}/api/admin/books
+Authorization: Bearer {{editorLogin.response.body.data.token}}
+Content-Type: application/json
+
+{
+  "title": "Editor Draft Book",
+  "description": "Created by editor role",
+  "language": "en",
+  "minAge": 5,
+  "maxAge": 8,
+  "categories": [],
+  "coverUrl": "",
+  "pages": [
+    {
+      "pageNumber": 1,
+      "imageUrl": "https://picsum.photos/seed/editor-book-1/960/1280",
+      "text": "Page one"
+    }
+  ],
+  "status": "draft"
+}
+
+### Editor Tries to Publish (forbidden)
+POST {{baseUrl}}/api/admin/books/{{editorCreateBook.response.body.data._id}}/publish
+Authorization: Bearer {{editorLogin.response.body.data.token}}
+Accept: application/json
+
+### Admin Publishes Book (allowed)
+POST {{baseUrl}}/api/admin/books/{{editorCreateBook.response.body.data._id}}/publish
+Authorization: Bearer {{adminLogin.response.body.data.token}}
+Accept: application/json
+
+### Unauthorized Admin Route (should return 401)
+GET {{baseUrl}}/api/admin/books
+Accept: application/json
+
+###########################################################
+# Parent Authentication + Parental Control (New Feature)
+###########################################################
+
+@parentEmail=parent1@hkids.com
+@parentPassword=Parent1234
+@readerDeviceId=kid-tablet-001
+
+### Parent Register
+# @name parentRegister
+POST {{baseUrl}}/api/parent/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{parentEmail}}",
+  "password": "{{parentPassword}}"
+}
+
+### Parent Login
+# @name parentLogin
+POST {{baseUrl}}/api/parent/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{parentEmail}}",
+  "password": "{{parentPassword}}"
+}
+
+### Parent Me
+GET {{baseUrl}}/api/parent/auth/me
+Authorization: Bearer {{parentLogin.response.body.data.token}}
+Accept: application/json
+
+### Create Child Profile
+# @name createChild
+POST {{baseUrl}}/api/parent/children
+Authorization: Bearer {{parentLogin.response.body.data.token}}
+Content-Type: application/json
+
+{
+  "name": "Lina",
+  "age": 7,
+  "dailyReadingLimitMinutes": 30
+}
+
+### List Child Profiles
+GET {{baseUrl}}/api/parent/children
+Authorization: Bearer {{parentLogin.response.body.data.token}}
+Accept: application/json
+
+### Create Pairing Code for Device
+# @name createPairingCode
+POST {{baseUrl}}/api/parent/devices/pairing-codes
+Authorization: Bearer {{parentLogin.response.body.data.token}}
+Content-Type: application/json
+
+{
+  "childProfileId": "{{createChild.response.body.data._id}}",
+  "expiresInMinutes": 10
+}
+
+### Claim Pairing Code from Reader Device (public route)
+# @name claimPairingCode
+POST {{baseUrl}}/api/public/pairing/claim
+Content-Type: application/json
+
+{
+  "code": "{{createPairingCode.response.body.data.code}}",
+  "deviceId": "{{readerDeviceId}}",
+  "deviceName": "Lina Tablet"
+}
+
+### Reader Context (public route with paired device)
+GET {{baseUrl}}/api/public/reader/context
+x-device-id: {{readerDeviceId}}
+Accept: application/json
+
+### Public Books (age restricted automatically by paired child profile)
+GET {{baseUrl}}/api/public/books
+x-device-id: {{readerDeviceId}}
+Accept: application/json
+
+### Public Book Read (consumes 1 minute and enforces daily limit)
+# Replace {{bookId}} with a published book ID valid for child age
+@bookId=000000000000000000000000
+GET {{baseUrl}}/api/public/books/{{bookId}}
+x-device-id: {{readerDeviceId}}
+Accept: application/json
+
+### Explicit Reader Usage Tracking (public, paired device required)
+POST {{baseUrl}}/api/public/reader/usage
+x-device-id: {{readerDeviceId}}
+Content-Type: application/json
+
+{
+  "minutes": 5
+}
+
+### Parent Devices List
+GET {{baseUrl}}/api/parent/devices
+Authorization: Bearer {{parentLogin.response.body.data.token}}
+Accept: application/json
+
+### Reassign Device to another Child Profile
+# Requires another child profile first
+PATCH {{baseUrl}}/api/parent/devices/{{readerDeviceId}}/child
+Authorization: Bearer {{parentLogin.response.body.data.token}}
+Content-Type: application/json
+
+{
+  "childProfileId": "{{createChild.response.body.data._id}}"
+}
+

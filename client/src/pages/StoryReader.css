@@ -1,0 +1,103 @@
+.story-reader-screen {
+  min-height: 100vh;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background:
+    radial-gradient(circle at 14% 8%, rgba(255, 220, 140, 0.7), transparent 30%),
+    radial-gradient(circle at 90% 15%, rgba(142, 233, 244, 0.7), transparent 32%),
+    linear-gradient(180deg, #f4fcff 0%, #fef8ef 100%);
+  color: #123f64;
+}
+
+.reader-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.reader-header h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  line-height: 1.1;
+}
+
+.reader-back-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: #ffffff;
+  color: #0e5487;
+  box-shadow: 0 8px 18px rgba(20, 74, 112, 0.15);
+}
+
+.reader-stage {
+  border-radius: 20px;
+  overflow: hidden;
+  background: #dcefff;
+  box-shadow: 0 24px 36px rgba(21, 71, 108, 0.18);
+}
+
+.reader-stage img {
+  width: 100%;
+  height: clamp(260px, 56vh, 680px);
+  object-fit: cover;
+  display: block;
+}
+
+.reader-paragraph {
+  margin: 0;
+  font-size: clamp(1.05rem, 2.2vw, 1.45rem);
+  line-height: 1.6;
+  font-weight: 600;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(22, 73, 111, 0.12);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.reader-nav {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.reader-nav-btn {
+  border: 0;
+  border-radius: 12px;
+  padding: 0.55rem 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(120deg, #ff8b4c, #ff5f80);
+  cursor: pointer;
+}
+
+.reader-nav-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.reader-empty-state,
+.reader-center-box {
+  margin: auto;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(21, 76, 114, 0.18);
+  border-radius: 18px;
+  padding: 1.4rem;
+}
+
+.reader-center-box h1 {
+  margin: 0 0 0.9rem;
+}
+
