@@ -1,0 +1,124 @@
+.story-editor-panel {
+  border-radius: 16px;
+  border: 1px solid rgba(31, 90, 130, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 14px 30px rgba(32, 89, 130, 0.1);
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.story-editor-empty-state {
+  display: grid;
+  gap: 0.55rem;
+  justify-items: center;
+}
+
+.story-editor-empty-state p {
+  margin: 0;
+}
+
+.story-editor-metadata {
+  border-radius: 16px;
+  border: 1px solid rgba(31, 90, 130, 0.14);
+  box-shadow: 0 14px 30px rgba(32, 89, 130, 0.1);
+  padding: 0.9rem;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 219, 142, 0.34), transparent 40%),
+    #ffffff;
+}
+
+.story-editor-metadata-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.7rem;
+}
+
+.story-editor-metadata-head h2 {
+  margin: 0;
+  font-family: var(--font-title);
+  color: #104369;
+}
+
+.story-editor-form-grid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.story-editor-form-grid label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.story-editor-form-grid span {
+  color: #20567f;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.story-editor-form-grid input,
+.story-editor-form-grid select,
+.story-editor-form-grid textarea {
+  width: 100%;
+  border: 1px solid rgba(34, 95, 138, 0.2);
+  border-radius: 11px;
+  padding: 0.65rem 0.75rem;
+  font-family: inherit;
+  color: #12456e;
+  background: #ffffff;
+}
+
+.story-editor-form-grid input[type="file"] {
+  padding: 0.34rem;
+  border-style: dashed;
+  background: rgba(239, 248, 255, 0.75);
+  color: #1b5e8d;
+}
+
+.story-editor-form-grid input[type="file"]::file-selector-button {
+  border: 0;
+  border-radius: 9px;
+  padding: 0.44rem 0.72rem;
+  margin-right: 0.62rem;
+  background: linear-gradient(130deg, #ff8a4c, #ff5f80);
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.story-editor-form-grid input[type="file"]::file-selector-button:hover {
+  filter: brightness(1.04);
+}
+
+.story-editor-form-grid input[type="file"]::-webkit-file-upload-button {
+  border: 0;
+  border-radius: 9px;
+  padding: 0.44rem 0.72rem;
+  margin-right: 0.62rem;
+  background: linear-gradient(130deg, #ff8a4c, #ff5f80);
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.story-editor-form-grid input:focus,
+.story-editor-form-grid select:focus,
+.story-editor-form-grid textarea:focus {
+  outline: 2px solid rgba(255, 121, 89, 0.26);
+  border-color: rgba(255, 121, 89, 0.78);
+}
+
+.story-editor-uploading-note {
+  color: #1f5f90;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.story-editor-inline-actions {
+  display: flex;
+  align-items: end;
+  gap: 0.55rem;
+}

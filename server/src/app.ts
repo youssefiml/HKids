@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
 import publicRoutes from "./routes/public.routes";
 import adminRoutes from "./routes/admin.routes";
 import authRoutes from "./routes/auth.routes";
@@ -48,6 +49,7 @@ app.use(rateLimiter);
 // Body parsing
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // Health check
 app.get("/health", (req, res) => {

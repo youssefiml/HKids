@@ -32,6 +32,5 @@ const CategorySchema = new Schema<ICategory>(
 
 // Indexes
 CategorySchema.index({ order: 1, name: 1 });
-CategorySchema.index({ status: 1 });
 
 export const Category = model<ICategory>("Category", CategorySchema);

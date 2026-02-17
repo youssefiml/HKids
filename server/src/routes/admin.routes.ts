@@ -1,40 +1,74 @@
-import { Router } from "express";
-import { protect, requireRole } from "../middlewares/auth.middleware";
-import { validate, bookSchema, categorySchema } from "../utils/validation.util";
+import express, { Router } from "express";
+import { protect, requireAdmin } from "../middlewares/auth.middleware";
+import { validate } from "../middlewares/validate.middleware";
 import {
-  getBooksController,
-  getBookByIdController,
-  createBookController,
-  updateBookController,
-  publishBookController,
-  deleteBookController,
-} from "../controllers/book.controller";
+  storyMetadataSchema,
+  storyMetadataUpdateSchema,
+  storyPageCreateSchema,
+  storyPageUpdateSchema,
+  storyPagesReorderSchema,
+  storyPublishSchema,
+} from "../utils/story.validation";
 import {
-  getCategoriesController,
-  getCategoryByIdController,
-  createCategoryController,
-  updateCategoryController,
-  deleteCategoryController,
-} from "../controllers/category.controller";
+  addAdminStoryPageController,
+  createAdminStoryController,
+  deleteAdminStoryController,
+  deleteAdminStoryPageController,
+  getAdminStoryByIdController,
+  listAdminStoriesController,
+  publishAdminStoryController,
+  reorderAdminStoryPagesController,
+  uploadStoryImageController,
+  updateAdminStoryController,
+  updateAdminStoryPageController,
+} from "../controllers/story.controller";
 
 const router = Router();
 
-// All admin routes require authentication
-router.use(protect);
+// All /api/admin routes require an authenticated admin token.
+router.use(protect, requireAdmin);
 
-// Books routes
-router.get("/books", requireRole("admin", "editor"), getBooksController);
-router.get("/books/:id", requireRole("admin", "editor"), getBookByIdController);
-router.post("/books", requireRole("admin", "editor"), validate(bookSchema), createBookController);
-router.patch("/books/:id", requireRole("admin", "editor"), validate(bookSchema.partial()), updateBookController);
-router.post("/books/:id/publish", requireRole("admin"), publishBookController);
-router.delete("/books/:id", requireRole("admin"), deleteBookController);
-
-// Categories routes
-router.get("/categories", requireRole("admin", "editor"), getCategoriesController);
-router.get("/categories/:id", requireRole("admin", "editor"), getCategoryByIdController);
-router.post("/categories", requireRole("admin"), validate(categorySchema), createCategoryController);
-router.patch("/categories/:id", requireRole("admin"), validate(categorySchema.partial()), updateCategoryController);
-router.delete("/categories/:id", requireRole("admin"), deleteCategoryController);
+// Story routes: admin only
+router.get("/stories", listAdminStoriesController);
+router.get("/stories/:id", getAdminStoryByIdController);
+router.post(
+  "/stories/upload-image",
+  express.raw({ type: "image/*", limit: "8mb" }),
+  uploadStoryImageController
+);
+router.post("/stories", validate(storyMetadataSchema), createAdminStoryController);
+router.patch("/stories/:id", validate(storyMetadataUpdateSchema), updateAdminStoryController);
+router.delete("/stories/:id", deleteAdminStoryController);
+router.post(
+  "/stories/:id/pages",
+  validate(storyPageCreateSchema),
+  addAdminStoryPageController
+);
+router.patch(
+  "/stories/:id/pages/:pageId",
+  validate(storyPageUpdateSchema),
+  updateAdminStoryPageController
+);
+router.delete("/stories/:id/pages/:pageId", deleteAdminStoryPageController);
+router.post(
+  "/stories/:id/pages/reorder",
+  validate(storyPagesReorderSchema),
+  reorderAdminStoryPagesController
+);
+router.patch(
+  "/stories/:id/pages/reorder",
+  validate(storyPagesReorderSchema),
+  reorderAdminStoryPagesController
+);
+router.post(
+  "/stories/:id/publish",
+  validate(storyPublishSchema),
+  publishAdminStoryController
+);
+router.patch(
+  "/stories/:id/publish",
+  validate(storyPublishSchema),
+  publishAdminStoryController
+);
 
 export default router;

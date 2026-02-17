@@ -6,8 +6,48 @@ import { assertChildBelongsToParent } from "./childProfile.service";
 import { ChildProfile, IChildProfile } from "../modules/children/childProfile.model";
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const USAGE_HISTORY_RETENTION_DAYS = 35;
 
 const getDateKeyUtc = (date = new Date()): string => date.toISOString().slice(0, 10);
+
+const getDateDaysAgoUtc = (daysAgo: number): Date => {
+  const date = new Date();
+  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() - daysAgo);
+  return date;
+};
+
+const pruneUsageHistory = (usageHistory: any[]): any[] => {
+  const cutoffDateKey = getDateKeyUtc(getDateDaysAgoUtc(USAGE_HISTORY_RETENTION_DAYS));
+  return usageHistory.filter((entry) => typeof entry?.date === "string" && entry.date >= cutoffDateKey);
+};
+
+const recordUsageHistoryMinutes = (
+  device: any,
+  childProfileId: string,
+  dateKey: string,
+  minutesToAdd: number
+) => {
+  if (!device.usageHistory || !Array.isArray(device.usageHistory)) {
+    device.usageHistory = [];
+  }
+
+  const existingEntry = device.usageHistory.find(
+    (entry: any) => entry.date === dateKey && entry.childProfileId === childProfileId
+  );
+
+  if (existingEntry) {
+    existingEntry.minutes = Math.min(existingEntry.minutes + minutesToAdd, 24 * 60);
+  } else {
+    device.usageHistory.push({
+      date: dateKey,
+      childProfileId,
+      minutes: Math.min(minutesToAdd, 24 * 60),
+    });
+  }
+
+  device.usageHistory = pruneUsageHistory(device.usageHistory);
+};
 
 const generatePairingCodeValue = (): string => {
   let code = "";
@@ -30,9 +70,26 @@ const refreshCodeStatusIfExpired = async (pairingCode: any): Promise<void> => {
 
 const ensureDeviceDailyUsageWindow = async (device: any): Promise<void> => {
   const today = getDateKeyUtc();
+  let hasChanges = false;
+
   if (device.dailyUsageDate !== today) {
     device.dailyUsageDate = today;
     device.dailyUsageMinutes = 0;
+    hasChanges = true;
+  }
+
+  if (!Array.isArray(device.usageHistory)) {
+    device.usageHistory = [];
+    hasChanges = true;
+  } else {
+    const originalLength = device.usageHistory.length;
+    device.usageHistory = pruneUsageHistory(device.usageHistory);
+    if (device.usageHistory.length !== originalLength) {
+      hasChanges = true;
+    }
+  }
+
+  if (hasChanges) {
     await device.save();
   }
 };
@@ -141,6 +198,7 @@ export const claimPairingCode = async (code: string, deviceId: string, deviceNam
       pairedAt: now,
       dailyUsageDate: getDateKeyUtc(now),
       dailyUsageMinutes: 0,
+      usageHistory: [],
     });
 
   device.parent = pairingCode.parent;
@@ -293,6 +351,12 @@ export const consumeReadingMinutes = async (deviceId: string, minutes: number) =
 
   const consumedMinutes = Math.min(requestedMinutes, remainingBefore);
   device.dailyUsageMinutes += consumedMinutes;
+  recordUsageHistoryMinutes(
+    device,
+    childProfile._id.toString(),
+    device.dailyUsageDate,
+    consumedMinutes
+  );
   device.lastSeenAt = new Date();
   await device.save();
 

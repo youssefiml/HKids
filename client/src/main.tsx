@@ -1,7 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import './index.css'
+import './styles/base/index.css'
+import './styles/shared/GlobalUi.css'
 import App from './App.tsx'
 import StoryReader from './pages/StoryReader.tsx'
 

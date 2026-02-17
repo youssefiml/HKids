@@ -19,6 +19,37 @@ export interface AdminBook extends StoryBook {
   publishedAt?: string;
 }
 
+export interface AdminStoryPage {
+  _id: string;
+  order: number;
+  imageUrl: string;
+  text?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AdminStory {
+  _id: string;
+  title: string;
+  description: string;
+  language: BookLanguage;
+  minAge: number;
+  maxAge: number;
+  coverImageUrl: string;
+  status: "draft" | "published";
+  publishedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  pagesCount?: number;
+  pages?: AdminStoryPage[];
+}
+
+export interface AdminUploadedImage {
+  url: string;
+  filename: string;
+  size: number;
+}
+
 export interface CreateAdminBookInput {
   title: string;
   description: string;
@@ -150,4 +181,160 @@ export const publishAdminBook = async (id: string, token: string) => {
 
 export const archiveAdminBook = async (id: string, token: string) => {
   return updateAdminBook(id, { status: "archived" }, token);
+};
+
+export const getAdminStories = async (
+  token: string,
+  filters?: { status?: "draft" | "published"; language?: BookLanguage; search?: string }
+) => {
+  const query = new URLSearchParams();
+  if (filters?.status) {
+    query.set("status", filters.status);
+  }
+  if (filters?.language) {
+    query.set("language", filters.language);
+  }
+  if (filters?.search?.trim()) {
+    query.set("search", filters.search.trim());
+  }
+
+  const path = `/api/admin/stories${query.toString() ? `?${query.toString()}` : ""}`;
+  return apiRequest<AdminStory[]>(path, { method: "GET" }, token);
+};
+
+export const getAdminStoryById = async (storyId: string, token: string) => {
+  return apiRequest<AdminStory>(`/api/admin/stories/${storyId}`, { method: "GET" }, token);
+};
+
+export const createAdminStory = async (
+  payload: {
+    title: string;
+    description?: string;
+    language: BookLanguage;
+    minAge: number;
+    maxAge: number;
+    coverImageUrl?: string;
+  },
+  token: string
+) => {
+  return apiRequest<AdminStory>(
+    "/api/admin/stories",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    token
+  );
+};
+
+export const updateAdminStory = async (
+  storyId: string,
+  payload: Partial<{
+    title: string;
+    description: string;
+    language: BookLanguage;
+    minAge: number;
+    maxAge: number;
+    coverImageUrl: string;
+  }>,
+  token: string
+) => {
+  return apiRequest<AdminStory>(
+    `/api/admin/stories/${storyId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+    token
+  );
+};
+
+export const deleteAdminStory = async (storyId: string, token: string) => {
+  return apiRequest<{ deleted: boolean }>(`/api/admin/stories/${storyId}`, { method: "DELETE" }, token);
+};
+
+export const addAdminStoryPage = async (
+  storyId: string,
+  payload: { imageUrl?: string; text?: string; order?: number },
+  token: string
+) => {
+  return apiRequest<AdminStoryPage>(
+    `/api/admin/stories/${storyId}/pages`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    token
+  );
+};
+
+export const updateAdminStoryPage = async (
+  storyId: string,
+  pageId: string,
+  payload: { imageUrl?: string; text?: string },
+  token: string
+) => {
+  return apiRequest<AdminStoryPage>(
+    `/api/admin/stories/${storyId}/pages/${pageId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+    token
+  );
+};
+
+export const deleteAdminStoryPage = async (storyId: string, pageId: string, token: string) => {
+  return apiRequest<{ deleted: boolean }>(
+    `/api/admin/stories/${storyId}/pages/${pageId}`,
+    {
+      method: "DELETE",
+    },
+    token
+  );
+};
+
+export const reorderAdminStoryPages = async (storyId: string, pageIds: string[], token: string) => {
+  return apiRequest<AdminStoryPage[]>(
+    `/api/admin/stories/${storyId}/pages/reorder`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ pageIds }),
+    },
+    token
+  );
+};
+
+export const setAdminStoryPublished = async (storyId: string, published: boolean, token: string) => {
+  return apiRequest<AdminStory>(
+    `/api/admin/stories/${storyId}/publish`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ published }),
+    },
+    token
+  );
+};
+
+export const uploadAdminStoryImage = async (file: File, token: string) => {
+  const lowerName = file.name.toLowerCase();
+  const fallbackType = lowerName.endsWith(".png")
+    ? "image/png"
+    : lowerName.endsWith(".webp")
+      ? "image/webp"
+      : lowerName.endsWith(".gif")
+        ? "image/gif"
+        : "image/jpeg";
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/stories/upload-image`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+      "Content-Type": file.type || fallbackType,
+    },
+    body: file,
+  });
+
+  return parseResponse<AdminUploadedImage>(response);
 };

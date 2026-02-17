@@ -18,6 +18,7 @@ import {
   createPairingCodeController,
   listParentDevicesController,
 } from "../controllers/parentDevice.controller";
+import { getParentWeeklyDigestController } from "../controllers/parentInsights.controller";
 
 const router = Router();
 
@@ -31,6 +32,6 @@ router.delete("/children/:id", deleteChildProfileController);
 router.post("/devices/pairing-codes", validate(createPairingCodeSchema), createPairingCodeController);
 router.get("/devices", listParentDevicesController);
 router.patch("/devices/:deviceId/child", validate(assignDeviceChildSchema), assignDeviceChildController);
+router.get("/insights/weekly", getParentWeeklyDigestController);
 
 export default router;
-

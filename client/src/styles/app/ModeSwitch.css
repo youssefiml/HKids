@@ -1,0 +1,30 @@
+.mode-switch {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 30;
+  width: fit-content;
+  margin: 0.75rem auto 0;
+  padding: 0.34rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(34, 94, 135, 0.22);
+  backdrop-filter: blur(8px);
+  display: flex;
+  gap: 0.36rem;
+}
+
+.mode-button {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #175286;
+  font-weight: 800;
+  padding: 0.46rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.83rem;
+}
+
+.mode-button.active {
+  color: #ffffff;
+  background: linear-gradient(130deg, #ff8f4f, #ff6a8f);
+}

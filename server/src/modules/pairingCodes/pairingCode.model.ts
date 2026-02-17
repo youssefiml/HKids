@@ -63,6 +63,3 @@ PairingCodeSchema.index({ code: 1, status: 1 }, { unique: true, partialFilterExp
 PairingCodeSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export const PairingCode = model<IPairingCode>("PairingCode", PairingCodeSchema);
-
-
-

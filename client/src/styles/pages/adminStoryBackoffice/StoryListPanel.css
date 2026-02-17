@@ -1,0 +1,89 @@
+.story-list-panel {
+  border-radius: 16px;
+  border: 1px solid rgba(31, 90, 130, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 14px 30px rgba(32, 89, 130, 0.1);
+  padding: 0.9rem;
+}
+
+.story-list-panel h2 {
+  margin: 0 0 0.7rem;
+  font-family: var(--font-title);
+  color: #104369;
+}
+
+.story-admin-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.story-list-empty-state {
+  display: grid;
+  gap: 0.55rem;
+  justify-items: center;
+}
+
+.story-list-empty-state p {
+  margin: 0;
+}
+
+.story-admin-card {
+  border-radius: 12px;
+  border: 1px solid rgba(29, 87, 128, 0.18);
+  background: #ffffff;
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.story-admin-card.active {
+  border-color: rgba(255, 98, 107, 0.45);
+  box-shadow: 0 10px 24px rgba(229, 96, 97, 0.18);
+}
+
+.story-admin-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 0.6rem;
+}
+
+.story-admin-card-head h3 {
+  margin: 0;
+  color: #11466f;
+  font-size: 1.05rem;
+}
+
+.status-pill {
+  border-radius: 999px;
+  padding: 0.24rem 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 800;
+  font-size: 0.68rem;
+}
+
+.status-pill.draft {
+  background: rgba(42, 132, 185, 0.14);
+  color: #1f5f90;
+}
+
+.status-pill.published {
+  background: rgba(56, 176, 121, 0.16);
+  color: #1f7247;
+}
+
+.story-admin-card-actions {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 640px) {
+  .story-admin-card-actions {
+    grid-template-columns: 1fr;
+  }
+}

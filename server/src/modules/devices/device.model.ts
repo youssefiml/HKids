@@ -2,6 +2,12 @@ import { Schema, model, Types, Document } from "mongoose";
 
 export type DeviceStatus = "paired" | "disabled";
 
+export interface IDeviceUsageHistoryEntry {
+  date: string;
+  childProfileId: string;
+  minutes: number;
+}
+
 export interface IDevice extends Document {
   parent: Types.ObjectId;
   activeChildProfile: Types.ObjectId;
@@ -12,9 +18,32 @@ export interface IDevice extends Document {
   lastSeenAt?: Date;
   dailyUsageDate: string;
   dailyUsageMinutes: number;
+  usageHistory: IDeviceUsageHistoryEntry[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+const DeviceUsageHistorySchema = new Schema<IDeviceUsageHistoryEntry>(
+  {
+    date: {
+      type: String,
+      required: true,
+      maxlength: 10,
+    },
+    childProfileId: {
+      type: String,
+      required: true,
+      maxlength: 24,
+    },
+    minutes: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 24 * 60,
+    },
+  },
+  { _id: false }
+);
 
 const DeviceSchema = new Schema<IDevice>(
   {
@@ -71,6 +100,10 @@ const DeviceSchema = new Schema<IDevice>(
       min: 0,
       max: 24 * 60,
     },
+    usageHistory: {
+      type: [DeviceUsageHistorySchema],
+      default: [],
+    },
   },
   { timestamps: true }
 );
@@ -79,4 +112,3 @@ DeviceSchema.index({ parent: 1, activeChildProfile: 1 });
 DeviceSchema.index({ parent: 1, status: 1 });
 
 export const Device = model<IDevice>("Device", DeviceSchema);
-

@@ -1,0 +1,93 @@
+name: hkids-tablet
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: hkids
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - hkids_net
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 10s
+
+  api:
+    image: hkids-api:local
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://mongo:27017/hkids
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      PARENT_JWT_EXPIRES_IN: ${PARENT_JWT_EXPIRES_IN:-12h}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    expose:
+      - "5000"
+    networks:
+      - hkids_net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:5000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  web:
+    image: hkids-web:local
+    build:
+      context: ../client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    networks:
+      - hkids_net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  seed:
+    image: hkids-api:local
+    command: ["node", "dist/scripts/seed.js", "--books=24"]
+    environment:
+      NODE_ENV: production
+      MONGO_URI: mongodb://mongo:27017/hkids
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      PARENT_JWT_EXPIRES_IN: ${PARENT_JWT_EXPIRES_IN:-12h}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - hkids_net
+    restart: "no"
+    profiles:
+      - seed
+
+volumes:
+  mongo_data:
+
+networks:
+  hkids_net:

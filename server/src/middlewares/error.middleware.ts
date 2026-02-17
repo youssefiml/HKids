@@ -36,6 +36,15 @@ export const errorHandler = (
     });
   }
 
+  // Body parser / raw parser errors (e.g. payload too large)
+  const knownStatus = (err as any).status ?? (err as any).statusCode;
+  if (typeof knownStatus === "number" && knownStatus >= 400 && knownStatus < 600) {
+    return res.status(knownStatus).json({
+      success: false,
+      message: err.message || "Request failed",
+    });
+  }
+
   // MongoDB validation errors
   if (err.name === "ValidationError") {
     const mongooseError = err as any;

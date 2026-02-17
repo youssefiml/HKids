@@ -54,43 +54,162 @@ Content-Type: application/json
   "password": "{{editorPassword}}"
 }
 
-### Editor Creates Book (allowed)
-# @name editorCreateBook
-POST {{baseUrl}}/api/admin/books
-Authorization: Bearer {{editorLogin.response.body.data.token}}
+### Admin routes now contain Story management only under /api/admin/stories
+
+###########################################################
+# Admin Story Management (Admin-only)
+###########################################################
+
+### Create Story Draft (admin only)
+# @name createStoryDraft
+POST {{baseUrl}}/api/admin/stories
+Authorization: Bearer {{adminLogin.response.body.data.token}}
 Content-Type: application/json
 
 {
-  "title": "Editor Draft Book",
-  "description": "Created by editor role",
+  "title": "The Lighthouse and the Little Star",
+  "description": "A calm story about courage and kindness.",
   "language": "en",
   "minAge": 5,
   "maxAge": 8,
-  "categories": [],
-  "coverUrl": "",
-  "pages": [
-    {
-      "pageNumber": 1,
-      "imageUrl": "https://picsum.photos/seed/editor-book-1/960/1280",
-      "text": "Page one"
-    }
-  ],
-  "status": "draft"
+  "coverImageUrl": "https://picsum.photos/seed/story-cover-1/600/900"
 }
 
-### Editor Tries to Publish (forbidden)
-POST {{baseUrl}}/api/admin/books/{{editorCreateBook.response.body.data._id}}/publish
-Authorization: Bearer {{editorLogin.response.body.data.token}}
-Accept: application/json
+### Upload Story Image (admin only, raw binary body)
+# @name uploadStoryImage
+POST {{baseUrl}}/api/admin/stories/upload-image
+Authorization: Bearer {{adminLogin.response.body.data.token}}
+Content-Type: image/png
 
-### Admin Publishes Book (allowed)
-POST {{baseUrl}}/api/admin/books/{{editorCreateBook.response.body.data._id}}/publish
+< ./sample-cover.png
+
+### List Stories (admin only)
+GET {{baseUrl}}/api/admin/stories?status=draft
 Authorization: Bearer {{adminLogin.response.body.data.token}}
 Accept: application/json
 
-### Unauthorized Admin Route (should return 401)
-GET {{baseUrl}}/api/admin/books
+### Get Story Detail with Pages (admin only)
+GET {{baseUrl}}/api/admin/stories/{{createStoryDraft.response.body.data._id}}
+Authorization: Bearer {{adminLogin.response.body.data.token}}
 Accept: application/json
+
+### Update Story Metadata (admin only)
+PATCH {{baseUrl}}/api/admin/stories/{{createStoryDraft.response.body.data._id}}
+Authorization: Bearer {{adminLogin.response.body.data.token}}
+Content-Type: application/json
+
+{
+  "description": "Updated draft description for the backoffice workflow."
+}
+
+### Add Story Page 1 (image only)
+# @name createStoryPageOne
+POST {{baseUrl}}/api/admin/stories/{{createStoryDraft.response.body.data._id}}/pages
+Authorization: Bearer {{adminLogin.response.body.data.token}}
+Content-Type: application/json
+
+{
+  "imageUrl": "https://picsum.photos/seed/story-page-1/960/1280"
+}
+
+### Add Story Page 2 (image + text)
+# @name createStoryPageTwo
+POST {{baseUrl}}/api/admin/stories/{{createStoryDraft.response.body.data._id}}/pages
+Authorization: Bearer {{adminLogin.response.body.data.token}}
+Content-Type: application/json
+
+{
+  "imageUrl": "https://picsum.photos/seed/story-page-2/960/1280",
+  "text": "Nora watched the lighthouse blink over the sea."
+}
+
+### Add Story Page 3 (text only)
+# @name createStoryPageThree
+POST {{baseUrl}}/api/admin/stories/{{createStoryDraft.response.body.data._id}}/pages
+Authorization: Bearer {{adminLogin.response.body.data.token}}
+Content-Type: application/json
+
+{
+  "text": "The waves whispered, and Nora followed the light home."
+}
+
+### Edit Story Page (admin only)
+PATCH {{baseUrl}}/api/admin/stories/{{createStoryDraft.response.body.data._id}}/pages/{{createStoryPageTwo.response.body.data._id}}
+Authorization: Bearer {{adminLogin.response.body.data.token}}
+Content-Type: application/json
+
+{
+  "text": "Nora watched the lighthouse glow and felt brave."
+}
+
+### Reorder Story Pages (admin only)
+POST {{baseUrl}}/api/admin/stories/{{createStoryDraft.response.body.data._id}}/pages/reorder
+Authorization: Bearer {{adminLogin.response.body.data.token}}
+Content-Type: application/json
+
+{
+  "pageIds": [
+    "{{createStoryPageTwo.response.body.data._id}}",
+    "{{createStoryPageOne.response.body.data._id}}",
+    "{{createStoryPageThree.response.body.data._id}}"
+  ]
+}
+
+### Publish Story (admin only)
+POST {{baseUrl}}/api/admin/stories/{{createStoryDraft.response.body.data._id}}/publish
+Authorization: Bearer {{adminLogin.response.body.data.token}}
+Content-Type: application/json
+
+{
+  "published": true
+}
+
+### Unpublish Story (admin only)
+POST {{baseUrl}}/api/admin/stories/{{createStoryDraft.response.body.data._id}}/publish
+Authorization: Bearer {{adminLogin.response.body.data.token}}
+Content-Type: application/json
+
+{
+  "published": false
+}
+
+### Delete Story Page (admin only)
+DELETE {{baseUrl}}/api/admin/stories/{{createStoryDraft.response.body.data._id}}/pages/{{createStoryPageOne.response.body.data._id}}
+Authorization: Bearer {{adminLogin.response.body.data.token}}
+Accept: application/json
+
+### Delete Story (admin only)
+DELETE {{baseUrl}}/api/admin/stories/{{createStoryDraft.response.body.data._id}}
+Authorization: Bearer {{adminLogin.response.body.data.token}}
+Accept: application/json
+
+### Non-admin blocked from Story APIs (expect 403)
+GET {{baseUrl}}/api/admin/stories
+Authorization: Bearer {{editorLogin.response.body.data.token}}
+Accept: application/json
+
+### Missing token blocked from Story APIs (expect 401)
+GET {{baseUrl}}/api/admin/stories
+Accept: application/json
+
+### Example Success Response (shape)
+# {
+#   "success": true,
+#   "message": "Story created as draft",
+#   "data": {
+#     "id": "65f0a9...",
+#     "_id": "65f0a9...",
+#     "title": "The Lighthouse and the Little Star",
+#     "status": "draft",
+#     "pagesCount": 0
+#   }
+# }
+
+### Example Error Response (shape)
+# {
+#   "success": false,
+#   "message": "Admin access required"
+# }
 
 ###########################################################
 # Parent Authentication + Parental Control (New Feature)
@@ -195,6 +314,16 @@ GET {{baseUrl}}/api/parent/devices
 Authorization: Bearer {{parentLogin.response.body.data.token}}
 Accept: application/json
 
+### Parent Weekly Digest (all children)
+GET {{baseUrl}}/api/parent/insights/weekly
+Authorization: Bearer {{parentLogin.response.body.data.token}}
+Accept: application/json
+
+### Parent Weekly Digest (single child)
+GET {{baseUrl}}/api/parent/insights/weekly?childProfileId={{createChild.response.body.data._id}}
+Authorization: Bearer {{parentLogin.response.body.data.token}}
+Accept: application/json
+
 ### Reassign Device to another Child Profile
 # Requires another child profile first
 PATCH {{baseUrl}}/api/parent/devices/{{readerDeviceId}}/child
@@ -204,4 +333,3 @@ Content-Type: application/json
 {
   "childProfileId": "{{createChild.response.body.data._id}}"
 }
-

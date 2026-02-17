@@ -1,0 +1,43 @@
+.story-admin-toolbar {
+  border-radius: 16px;
+  border: 1px solid rgba(31, 90, 130, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 14px 30px rgba(32, 89, 130, 0.1);
+  padding: 0.8rem;
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  align-items: end;
+}
+
+.toolbar-action {
+  align-self: end;
+}
+
+.story-admin-toolbar label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.story-admin-toolbar span {
+  color: #20567f;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.story-admin-toolbar input,
+.story-admin-toolbar select {
+  width: 100%;
+  border: 1px solid rgba(34, 95, 138, 0.2);
+  border-radius: 11px;
+  padding: 0.65rem 0.75rem;
+  font-family: inherit;
+  color: #12456e;
+  background: #ffffff;
+}
+
+.story-admin-toolbar input:focus,
+.story-admin-toolbar select:focus {
+  outline: 2px solid rgba(255, 121, 89, 0.26);
+  border-color: rgba(255, 121, 89, 0.78);
+}

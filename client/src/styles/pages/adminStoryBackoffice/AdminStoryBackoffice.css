@@ -1,0 +1,17 @@
+.story-admin-shell {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.story-admin-layout {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .story-admin-layout {
+    grid-template-columns: 1fr;
+  }
+}
