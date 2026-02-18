@@ -1,0 +1,14 @@
+{
+  "name": "hkids-platform",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Monorepo entrypoint for deployments that build from repository root.",
+  "scripts": {
+    "build": "npm ci --prefix server && npm run build --prefix server",
+    "start": "npm run start --prefix server",
+    "dev": "npm run dev --prefix server"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
