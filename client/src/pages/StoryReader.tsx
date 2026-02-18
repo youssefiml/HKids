@@ -4,8 +4,17 @@ import { useNavigate, useParams } from "react-router-dom";
 import type { StoryBook } from "../api/publicApi";
 import { fetchPublicBookById } from "../api/publicApi";
 import { getStoredReaderSession } from "../utils/readerSession";
-import type { Story } from "../mock/stories";
 import "../styles/pages/StoryReader.css";
+
+type Story = {
+  id: string;
+  title: string;
+  pages: Array<{
+    index: number;
+    imageUrl: string;
+    text: string;
+  }>;
+};
 
 const FOCUS_SESSION_OPTIONS = [8, 10, 12];
 const OFFSCREEN_MISSIONS = [
