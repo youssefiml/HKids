@@ -20,7 +20,7 @@ const router = Router();
 // Public pairing routes - no authentication required
 router.post("/pairing/claim", validate(claimPairingCodeSchema), claimPairingCodeController);
 
-// Reader routes - still public, but restrictions are applied when a paired device is provided
+// Reader routes - require a paired reader device context
 router.use(attachReaderContext);
 router.get("/reader/context", getReaderContextController);
 router.post(
@@ -29,8 +29,8 @@ router.post(
   validate(consumeReaderUsageSchema),
   consumeReaderUsageController
 );
-router.get("/books", applyReaderAgeFilter, getBooksController);
-router.get("/books/:id", enforceReaderDailyLimit, getBookByIdController);
-router.get("/categories", getCategoriesController);
+router.get("/books", requirePairedReaderDevice, applyReaderAgeFilter, getBooksController);
+router.get("/books/:id", requirePairedReaderDevice, enforceReaderDailyLimit, getBookByIdController);
+router.get("/categories", requirePairedReaderDevice, getCategoriesController);
 
 export default router;

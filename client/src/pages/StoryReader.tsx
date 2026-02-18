@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { StoryBook } from "../api/publicApi";
-import { fetchPublicBooks } from "../api/publicApi";
-import { mockStories } from "../mock/stories";
+import { fetchPublicBookById } from "../api/publicApi";
+import { getStoredReaderSession } from "../utils/readerSession";
 import type { Story } from "../mock/stories";
 import "../styles/pages/StoryReader.css";
 
@@ -50,11 +50,13 @@ const formatDuration = (totalSeconds: number): string => {
 function StoryReader() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const readerSession = useMemo(() => getStoredReaderSession(), []);
 
   const [story, setStory] = useState<Story | null>(null);
   const [pageCursor, setPageCursor] = useState(0);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [focusMinutes, setFocusMinutes] = useState(10);
   const [focusSecondsRemaining, setFocusSecondsRemaining] = useState(10 * 60);
   const [sessionPaused, setSessionPaused] = useState(false);
@@ -75,6 +77,7 @@ function StoryReader() {
     const loadStory = async () => {
       setLoading(true);
       setNotFound(false);
+      setLoadError(null);
       setStory(null);
       setPageCursor(0);
       setRetellAnswer(null);
@@ -88,28 +91,28 @@ function StoryReader() {
         return;
       }
 
-      try {
-        const books = await fetchPublicBooks({});
-        const foundBook = books.find((book) => book._id === id);
-        if (foundBook) {
-          if (!cancelled) {
-            setStory(toStory(foundBook));
-            setLoading(false);
-          }
-          return;
+      if (!readerSession?.deviceId) {
+        if (!cancelled) {
+          setLoading(false);
+          setLoadError("Reader access requires child pairing. Pair a child device first.");
         }
-      } catch {
-        // fallback to mock data below
+        return;
       }
 
-      const fallbackStory = mockStories.find((item) => item.id === id);
-      if (!cancelled) {
-        if (fallbackStory) {
-          setStory(fallbackStory);
-        } else {
-          setNotFound(true);
+      try {
+        const foundBook = await fetchPublicBookById(id, readerSession.deviceId);
+        if (!cancelled) {
+          setStory(toStory(foundBook));
+          setLoading(false);
         }
-        setLoading(false);
+      } catch (error) {
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : "Could not load this story.";
+          setLoadError(message);
+          setNotFound(message.toLowerCase().includes("not found"));
+          setStory(null);
+          setLoading(false);
+        }
       }
     };
 
@@ -117,7 +120,7 @@ function StoryReader() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, readerSession?.deviceId]);
 
   const totalPages = story?.pages.length ?? 0;
   const currentPage = useMemo(() => story?.pages[pageCursor], [story, pageCursor]);
@@ -188,6 +191,34 @@ function StoryReader() {
           Back
         </button>
         <div className="reader-empty-state">Loading story...</div>
+      </main>
+    );
+  }
+
+  if (!readerSession?.deviceId) {
+    return (
+      <main className="story-reader-screen">
+        <div className="reader-center-box">
+          <h1>Child pairing required</h1>
+          <p>Open Child Reader and pair this device with a code from the parent account.</p>
+          <button type="button" className="reader-back-btn" onClick={() => navigate("/")}>
+            Back to Home
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (loadError && !notFound) {
+    return (
+      <main className="story-reader-screen">
+        <div className="reader-center-box">
+          <h1>Access blocked</h1>
+          <p>{loadError}</p>
+          <button type="button" className="reader-back-btn" onClick={() => navigate("/")}>
+            Back to Home
+          </button>
+        </div>
       </main>
     );
   }

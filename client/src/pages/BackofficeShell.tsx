@@ -102,62 +102,87 @@ function BackofficeShell() {
     }
   };
 
-  return (
-    <main className="backoffice-app">
-      <header className="backoffice-header">
-        <div>
-          <p className="hero-label">HKids Backoffice</p>
-          <h1>Admin Story Management</h1>
-        </div>
-        {user && (
-          <div className="session-chip">
-            <span>{user.name}</span>
-            <small>{user.role}</small>
-            <button type="button" className="ghost-button" onClick={handleLogout}>
-              Logout
-            </button>
-          </div>
-        )}
-      </header>
+  const isLoggedIn = Boolean(token && user);
+  const isRestoringSession = Boolean(token) && authLoading && !user;
 
-      {!token || !user ? (
-        <section className="auth-card">
-          <h2>Login</h2>
-          <p>Sign in with your admin account to manage stories and pages.</p>
-          <form className="auth-form" onSubmit={handleLogin}>
-            <label>
-              <span>Email</span>
-              <input
-                type="email"
-                value={loginForm.email}
-                onChange={(event) =>
-                  setLoginForm((current) => ({ ...current, email: event.target.value }))
-                }
-                required
-              />
-            </label>
-            <label>
-              <span>Password</span>
-              <input
-                type="password"
-                value={loginForm.password}
-                onChange={(event) =>
-                  setLoginForm((current) => ({ ...current, password: event.target.value }))
-                }
-                required
-              />
-            </label>
-            <button type="submit" className="read-button" disabled={authLoading}>
-              {authLoading ? "Signing in..." : "Sign In"}
-            </button>
-          </form>
-          {authError && <p className="error-text">{authError}</p>}
-        </section>
-      ) : user.role === "admin" ? (
-        <AdminStoryBackoffice token={token} />
+  return (
+    <main className={isLoggedIn ? "backoffice-app" : "admin-auth-page"}>
+      {isLoggedIn ? (
+        <>
+          <header className="backoffice-header">
+            <div>
+              <p className="hero-label">HKids Backoffice</p>
+              <h1>Admin Story Management</h1>
+            </div>
+            <div className="session-chip">
+              <span>{user?.name}</span>
+              <small>{user?.role}</small>
+              <button type="button" className="ghost-button" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
+          </header>
+
+          {user?.role === "admin" ? (
+            <AdminStoryBackoffice token={token!} />
+          ) : (
+            <section className="state-card error">
+              This area is restricted. Only admins can create, edit, reorder, or publish stories.
+            </section>
+          )}
+        </>
       ) : (
-        <section className="state-card error">
-          This area is restricted. Only admins can create, edit, reorder, or publish stories.
+        <section className="admin-auth-layout">
+          <article className="admin-auth-card">
+            <div className="admin-auth-content">
+              <h1>Sign in</h1>
+              <p>Manage stories, pages, and publishing from one secure place.</p>
+              <form className="admin-auth-form" onSubmit={handleLogin}>
+                <label htmlFor="admin-email">Email</label>
+                <input
+                  id="admin-email"
+                  type="email"
+                  value={loginForm.email}
+                  onChange={(event) =>
+                    setLoginForm((current) => ({ ...current, email: event.target.value }))
+                  }
+                  placeholder="admin@hkids.com"
+                  autoComplete="email"
+                  required
+                />
+
+                <label htmlFor="admin-password">Password</label>
+                <input
+                  id="admin-password"
+                  type="password"
+                  value={loginForm.password}
+                  onChange={(event) =>
+                    setLoginForm((current) => ({ ...current, password: event.target.value }))
+                  }
+                  placeholder="Enter password"
+                  autoComplete="current-password"
+                  required
+                />
+
+                <button type="submit" className="admin-auth-submit" disabled={authLoading}>
+                  {authLoading ? "Signing in..." : "Log in"}
+                </button>
+              </form>
+
+              {authError && <p className="admin-auth-error">{authError}</p>}
+              {!authError && isRestoringSession && (
+                <p className="admin-auth-note">Restoring your session...</p>
+              )}
+            </div>
+          </article>
+
+          <aside className="admin-auth-brand" aria-label="HKids branding panel">
+            <div>
+              <p className="brand-kicker">HKids</p>
+              <h2>Admin Portal</h2>
+              <p>Single entrypoint at /admin for the full backoffice flow.</p>
+            </div>
+          </aside>
         </section>
       )}
     </main>

@@ -27,6 +27,32 @@ export interface StoryBook {
   updatedAt?: string;
 }
 
+export interface ReaderPairingClaimResult {
+  device: {
+    id: string;
+    deviceId: string;
+    deviceName?: string;
+    pairedAt?: string;
+  };
+  childProfile: {
+    id: string;
+    name: string;
+    age: number;
+    dailyReadingLimitMinutes: number;
+  };
+}
+
+export interface ReaderContext {
+  paired: boolean;
+  deviceId?: string;
+  childProfileId?: string;
+  childName?: string;
+  dailyLimitMinutes?: number;
+  usedMinutes?: number;
+  remainingMinutes?: number;
+  isLocked?: boolean;
+}
+
 interface ApiSuccess<T> {
   success: boolean;
   message?: string;
@@ -52,9 +78,19 @@ const toQueryString = (params: Record<string, string | number | undefined>) => {
   return encoded ? `?${encoded}` : "";
 };
 
-const getApiData = async <T>(path: string): Promise<T> => {
+const publicRequest = async <T>(
+  path: string,
+  options: RequestInit = {},
+  deviceId?: string
+): Promise<T> => {
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { Accept: "application/json" },
+    ...options,
+    headers: {
+      Accept: "application/json",
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(deviceId ? { "x-device-id": deviceId } : {}),
+      ...((options.headers as Record<string, string> | undefined) ?? {}),
+    },
   });
 
   const payload = (await response.json().catch(() => null)) as
@@ -81,19 +117,48 @@ const normalizeBook = (book: StoryBook): StoryBook => ({
   categories: book.categories ?? [],
 });
 
-export const fetchPublicBooks = async (filters: BookFilters): Promise<StoryBook[]> => {
-  const data = await getApiData<StoryBook[]>(
+export const fetchPublicBooks = async (filters: BookFilters, deviceId: string): Promise<StoryBook[]> => {
+  const data = await publicRequest<StoryBook[]>(
     `/api/public/books${toQueryString({
       age: filters.age,
       lang: filters.lang,
       category: filters.category,
-    })}`
+    })}`,
+    { method: "GET" },
+    deviceId
   );
 
   return data.map(normalizeBook);
 };
 
-export const fetchPublicCategories = async (): Promise<StoryCategory[]> => {
-  return getApiData<StoryCategory[]>("/api/public/categories");
+export const fetchPublicBookById = async (id: string, deviceId: string): Promise<StoryBook> => {
+  const book = await publicRequest<StoryBook>(`/api/public/books/${id}`, { method: "GET" }, deviceId);
+  return normalizeBook(book);
 };
 
+export const fetchPublicCategories = async (deviceId: string): Promise<StoryCategory[]> => {
+  return publicRequest<StoryCategory[]>("/api/public/categories", { method: "GET" }, deviceId);
+};
+
+export const claimReaderPairingCode = async (
+  code: string,
+  deviceId: string,
+  deviceName?: string
+): Promise<ReaderPairingClaimResult> => {
+  return publicRequest<ReaderPairingClaimResult>(
+    "/api/public/pairing/claim",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        code,
+        deviceId,
+        ...(deviceName?.trim() ? { deviceName: deviceName.trim() } : {}),
+      }),
+    },
+    deviceId
+  );
+};
+
+export const fetchReaderContext = async (deviceId: string): Promise<ReaderContext> => {
+  return publicRequest<ReaderContext>("/api/public/reader/context", { method: "GET" }, deviceId);
+};

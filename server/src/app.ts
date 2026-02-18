@@ -19,14 +19,18 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 // CORS: with credentials: true, origin cannot be "*" — allow explicit origins
-const allowedOrigins = process.env.FRONTEND_URL
+const defaultLocalOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:3000",
+];
+
+const envOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(",").map((u) => u.trim())
-  : [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://127.0.0.1:5173",
-      "http://127.0.0.1:3000",
-    ];
+  : [];
+
+const allowedOrigins = Array.from(new Set([...defaultLocalOrigins, ...envOrigins]));
 
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
@@ -37,7 +41,7 @@ const corsOptions: cors.CorsOptions = {
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-device-id"],
   optionsSuccessStatus: 200,
 };
 

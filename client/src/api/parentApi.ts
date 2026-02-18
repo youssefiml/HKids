@@ -9,12 +9,36 @@ export interface ParentAuthPayload {
   parent: ParentAccount;
 }
 
+export interface CreateParentChildInput {
+  name: string;
+  age: number;
+  dailyReadingLimitMinutes: number;
+}
+
+export interface UpdateParentChildInput {
+  name?: string;
+  age?: number;
+  dailyReadingLimitMinutes?: number;
+}
+
 export interface ParentChildProfile {
   _id: string;
   name: string;
   age: number;
   dailyReadingLimitMinutes: number;
   isActive: boolean;
+}
+
+export interface ParentPairingCode {
+  id: string;
+  code: string;
+  expiresAt: string;
+  childProfile: {
+    id: string;
+    name: string;
+    age: number;
+    dailyReadingLimitMinutes: number;
+  };
 }
 
 export interface ParentWeeklyDigestDailyItem {
@@ -63,16 +87,30 @@ interface ApiSuccess<T> {
   data: T;
 }
 
+interface ApiErrorPayload {
+  message?: string;
+  errors?: Array<{
+    field?: string;
+    message?: string;
+  }>;
+}
+
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000").replace(/\/$/, "");
 
 const parseResponse = async <T>(response: Response): Promise<T> => {
-  const payload = (await response.json().catch(() => null)) as
-    | ApiSuccess<T>
-    | { message?: string }
-    | null;
+  const payload = (await response.json().catch(() => null)) as ApiSuccess<T> | ApiErrorPayload | null;
 
   if (!response.ok) {
-    throw new Error(payload?.message ?? `Request failed (${response.status})`);
+    const validationMessage =
+      payload &&
+      typeof payload === "object" &&
+      "errors" in payload &&
+      Array.isArray(payload.errors)
+        ? payload.errors.find((item) => typeof item?.message === "string")?.message
+        : undefined;
+
+    const errorMessage = [payload?.message, validationMessage].filter(Boolean).join(": ");
+    throw new Error(errorMessage || `Request failed (${response.status})`);
   }
 
   if (!payload || typeof payload !== "object" || !("data" in payload)) {
@@ -105,12 +143,67 @@ export const loginParent = async (email: string, password: string) => {
   });
 };
 
+export const registerParent = async (email: string, password: string) => {
+  return parentRequest<ParentAuthPayload>("/api/parent/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+};
+
 export const getParentMe = async (token: string) => {
   return parentRequest<ParentAccount>("/api/parent/auth/me", { method: "GET" }, token);
 };
 
 export const listParentChildren = async (token: string) => {
   return parentRequest<ParentChildProfile[]>("/api/parent/children", { method: "GET" }, token);
+};
+
+export const createParentChild = async (token: string, input: CreateParentChildInput) => {
+  return parentRequest<ParentChildProfile>(
+    "/api/parent/children",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+    token
+  );
+};
+
+export const updateParentChild = async (
+  token: string,
+  childProfileId: string,
+  input: UpdateParentChildInput
+) => {
+  return parentRequest<ParentChildProfile>(
+    `/api/parent/children/${childProfileId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    },
+    token
+  );
+};
+
+export const deleteParentChild = async (token: string, childProfileId: string) => {
+  return parentRequest<ParentChildProfile>(`/api/parent/children/${childProfileId}`, { method: "DELETE" }, token);
+};
+
+export const createParentPairingCode = async (
+  token: string,
+  childProfileId: string,
+  expiresInMinutes?: number
+) => {
+  return parentRequest<ParentPairingCode>(
+    "/api/parent/devices/pairing-codes",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        childProfileId,
+        ...(expiresInMinutes ? { expiresInMinutes } : {}),
+      }),
+    },
+    token
+  );
 };
 
 export const getParentWeeklyDigest = async (token: string, childProfileId?: string) => {

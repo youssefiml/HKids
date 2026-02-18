@@ -1,11 +1,16 @@
 import "../styles/pages/ParentPortal.css";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import {
+  createParentChild,
+  createParentPairingCode,
+  deleteParentChild,
   getParentMe,
   getParentWeeklyDigest,
   listParentChildren,
   loginParent,
+  registerParent,
+  updateParentChild,
 } from "../api/parentApi";
 import type {
   ParentAccount,
@@ -15,6 +20,15 @@ import type {
 } from "../api/parentApi";
 
 const PARENT_TOKEN_STORAGE_KEY = "hkids_parent_token";
+
+type AuthMode = "login" | "register";
+
+type PairingUiState = {
+  loading: boolean;
+  error: string | null;
+  code: string | null;
+  expiresAt: string | null;
+};
 
 const trendLabelMap: Record<ParentWeeklyDigestChild["trend"], string> = {
   up: "Trending Up",
@@ -28,6 +42,8 @@ const trendClassMap: Record<ParentWeeklyDigestChild["trend"], string> = {
   steady: "steady",
 };
 
+const PARENT_REGISTER_PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d).{8,128}$/;
+
 function ParentPortal() {
   const [token, setToken] = useState<string | null>(() => {
     try {
@@ -37,14 +53,34 @@ function ParentPortal() {
     }
   });
   const [parent, setParent] = useState<ParentAccount | null>(null);
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [loginForm, setLoginForm] = useState({ email: "parent1@hkids.com", password: "Parent1234" });
+  const [registerForm, setRegisterForm] = useState({ email: "", password: "" });
 
   const [children, setChildren] = useState<ParentChildProfile[]>([]);
   const [childrenLoading, setChildrenLoading] = useState(false);
   const [childrenError, setChildrenError] = useState<string | null>(null);
   const [selectedChildId, setSelectedChildId] = useState<string>("all");
+  const [childForm, setChildForm] = useState({
+    name: "",
+    age: 7,
+    dailyReadingLimitMinutes: 30,
+  });
+  const [childFormLoading, setChildFormLoading] = useState(false);
+  const [childFormError, setChildFormError] = useState<string | null>(null);
+  const [pairingStateByChildId, setPairingStateByChildId] = useState<Record<string, PairingUiState>>({});
+  const [editingChildId, setEditingChildId] = useState<string | null>(null);
+  const [editChildForm, setEditChildForm] = useState({
+    name: "",
+    age: 7,
+    dailyReadingLimitMinutes: 30,
+  });
+  const [confirmDeleteChildId, setConfirmDeleteChildId] = useState<string | null>(null);
+  const [updatingChildId, setUpdatingChildId] = useState<string | null>(null);
+  const [deletingChildId, setDeletingChildId] = useState<string | null>(null);
+  const [childActionErrorById, setChildActionErrorById] = useState<Record<string, string | null>>({});
 
   const [digest, setDigest] = useState<ParentWeeklyDigest | null>(null);
   const [digestLoading, setDigestLoading] = useState(false);
@@ -109,6 +145,15 @@ function ParentPortal() {
     try {
       const result = await listParentChildren(token);
       setChildren(result);
+      setSelectedChildId((current) =>
+        current === "all" || result.some((child) => child._id === current) ? current : "all"
+      );
+      setEditingChildId((current) =>
+        current && result.some((child) => child._id === current) ? current : null
+      );
+      setConfirmDeleteChildId((current) =>
+        current && result.some((child) => child._id === current) ? current : null
+      );
     } catch (error) {
       setChildren([]);
       setChildrenError(error instanceof Error ? error.message : "Could not load children.");
@@ -153,17 +198,28 @@ function ParentPortal() {
     void loadDigest();
   }, [token, parent, selectedChildId, reloadSignal, loadDigest]);
 
-  const handleLogin = async (event: FormEvent) => {
+  const handleAuthSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setAuthLoading(true);
     setAuthError(null);
 
     try {
-      const result = await loginParent(loginForm.email, loginForm.password);
+      if (authMode === "register" && !PARENT_REGISTER_PASSWORD_PATTERN.test(registerForm.password)) {
+        throw new Error("Password must be 8-128 characters and include at least one letter and one number.");
+      }
+
+      const result =
+        authMode === "login"
+          ? await loginParent(loginForm.email, loginForm.password)
+          : await registerParent(registerForm.email, registerForm.password);
+
       setToken(result.token);
       setParent(result.parent);
+      if (authMode === "register") {
+        setRegisterForm({ email: "", password: "" });
+      }
     } catch (error) {
-      setAuthError(error instanceof Error ? error.message : "Login failed.");
+      setAuthError(error instanceof Error ? error.message : "Authentication failed.");
     } finally {
       setAuthLoading(false);
     }
@@ -175,46 +231,262 @@ function ParentPortal() {
     setChildren([]);
     setDigest(null);
     setSelectedChildId("all");
+    setPairingStateByChildId({});
+    setEditingChildId(null);
+    setConfirmDeleteChildId(null);
+    setChildActionErrorById({});
   };
 
-  const generatedAtLabel = useMemo(() => {
-    if (!digest?.generatedAt) {
-      return null;
+  const handleCreateChild = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!token || !parent) {
+      return;
     }
-    const date = new Date(digest.generatedAt);
-    return Number.isNaN(date.getTime()) ? null : date.toLocaleString();
-  }, [digest]);
+
+    setChildFormLoading(true);
+    setChildFormError(null);
+    try {
+      await createParentChild(token, {
+        name: childForm.name,
+        age: childForm.age,
+        dailyReadingLimitMinutes: childForm.dailyReadingLimitMinutes,
+      });
+      setChildForm({ name: "", age: 7, dailyReadingLimitMinutes: 30 });
+      await loadChildren();
+      setReloadSignal((value) => value + 1);
+    } catch (error) {
+      setChildFormError(error instanceof Error ? error.message : "Could not create child account.");
+    } finally {
+      setChildFormLoading(false);
+    }
+  };
+
+  const handleGeneratePairingCode = async (childProfileId: string) => {
+    if (!token || !parent) {
+      return;
+    }
+
+    setPairingStateByChildId((current) => ({
+      ...current,
+      [childProfileId]: {
+        loading: true,
+        error: null,
+        code: current[childProfileId]?.code ?? null,
+        expiresAt: current[childProfileId]?.expiresAt ?? null,
+      },
+    }));
+
+    try {
+      const pairing = await createParentPairingCode(token, childProfileId, 15);
+      setPairingStateByChildId((current) => ({
+        ...current,
+        [childProfileId]: {
+          loading: false,
+          error: null,
+          code: pairing.code,
+          expiresAt: pairing.expiresAt,
+        },
+      }));
+    } catch (error) {
+      setPairingStateByChildId((current) => ({
+        ...current,
+        [childProfileId]: {
+          loading: false,
+          error: error instanceof Error ? error.message : "Could not generate code.",
+          code: null,
+          expiresAt: null,
+        },
+      }));
+    }
+  };
+
+  const handleEditChildStart = (child: ParentChildProfile) => {
+    setEditingChildId(child._id);
+    setConfirmDeleteChildId((current) => (current === child._id ? null : current));
+    setEditChildForm({
+      name: child.name,
+      age: child.age,
+      dailyReadingLimitMinutes: child.dailyReadingLimitMinutes,
+    });
+    setChildActionErrorById((current) => ({ ...current, [child._id]: null }));
+  };
+
+  const handleEditChildCancel = () => {
+    setEditingChildId(null);
+  };
+
+  const handleDeleteChildRequest = (childProfileId: string) => {
+    setConfirmDeleteChildId(childProfileId);
+    setChildActionErrorById((current) => ({ ...current, [childProfileId]: null }));
+  };
+
+  const handleDeleteChildCancel = () => {
+    setConfirmDeleteChildId(null);
+  };
+
+  const handleUpdateChild = async (event: FormEvent, childProfileId: string) => {
+    event.preventDefault();
+    if (!token || !parent) {
+      return;
+    }
+
+    const payload = {
+      name: editChildForm.name.trim(),
+      age: editChildForm.age,
+      dailyReadingLimitMinutes: editChildForm.dailyReadingLimitMinutes,
+    };
+
+    if (!payload.name) {
+      setChildActionErrorById((current) => ({ ...current, [childProfileId]: "Child name is required." }));
+      return;
+    }
+
+    setUpdatingChildId(childProfileId);
+    setChildActionErrorById((current) => ({ ...current, [childProfileId]: null }));
+
+    try {
+      await updateParentChild(token, childProfileId, payload);
+      setEditingChildId(null);
+      await loadChildren();
+      setReloadSignal((value) => value + 1);
+    } catch (error) {
+      setChildActionErrorById((current) => ({
+        ...current,
+        [childProfileId]: error instanceof Error ? error.message : "Could not update child profile.",
+      }));
+    } finally {
+      setUpdatingChildId(null);
+    }
+  };
+
+  const handleDeleteChildConfirm = async (child: ParentChildProfile) => {
+    if (!token || !parent) {
+      return;
+    }
+
+    setDeletingChildId(child._id);
+    setChildActionErrorById((current) => ({ ...current, [child._id]: null }));
+
+    try {
+      await deleteParentChild(token, child._id);
+      setPairingStateByChildId((current) => {
+        const next = { ...current };
+        delete next[child._id];
+        return next;
+      });
+      if (editingChildId === child._id) {
+        setEditingChildId(null);
+      }
+      setConfirmDeleteChildId(null);
+      await loadChildren();
+      setReloadSignal((value) => value + 1);
+    } catch (error) {
+      setChildActionErrorById((current) => ({
+        ...current,
+        [child._id]: error instanceof Error ? error.message : "Could not delete child profile.",
+      }));
+    } finally {
+      setDeletingChildId(null);
+    }
+  };
 
   if (!token || !parent) {
     return (
-      <main className="parent-portal">
-        <section className="auth-card">
-          <h2>Parent Login</h2>
-          <p>Get your weekly digest and next-step recommendation in under a minute.</p>
-          <form className="auth-form" onSubmit={handleLogin}>
-            <label>
-              <span>Email</span>
-              <input
-                type="email"
-                value={loginForm.email}
-                onChange={(event) => setLoginForm((current) => ({ ...current, email: event.target.value }))}
-                required
-              />
-            </label>
-            <label>
-              <span>Password</span>
-              <input
-                type="password"
-                value={loginForm.password}
-                onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
-                required
-              />
-            </label>
-            <button type="submit" className="read-button" disabled={authLoading}>
-              {authLoading ? "Signing in..." : "Sign In"}
-            </button>
-          </form>
-          {authError && <p className="error-text">{authError}</p>}
+      <main className="parent-portal parent-auth-shell">
+        <section className="parent-auth-layout">
+          <article className="auth-card parent-auth-card">
+            <div className="parent-auth-tabs" role="tablist" aria-label="Parent authentication mode">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={authMode === "login"}
+                className={authMode === "login" ? "parent-auth-tab active" : "parent-auth-tab"}
+                onClick={() => {
+                  setAuthError(null);
+                  setAuthMode("login");
+                }}
+              >
+                Login
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={authMode === "register"}
+                className={authMode === "register" ? "parent-auth-tab active" : "parent-auth-tab"}
+                onClick={() => {
+                  setAuthError(null);
+                  setAuthMode("register");
+                }}
+              >
+                Register
+              </button>
+            </div>
+
+            <div className="parent-auth-content">
+              <h2>{authMode === "login" ? "Parent Login" : "Create Parent Account"}</h2>
+              <p>
+                Parent owns the account. Parent creates child accounts and gives pairing codes for child reading
+                access.
+              </p>
+              <form className="auth-form parent-auth-form" onSubmit={handleAuthSubmit}>
+                <label>
+                  <span>Email</span>
+                  <input
+                    type="email"
+                    value={authMode === "login" ? loginForm.email : registerForm.email}
+                    onChange={(event) =>
+                      authMode === "login"
+                        ? setLoginForm((current) => ({ ...current, email: event.target.value }))
+                        : setRegisterForm((current) => ({ ...current, email: event.target.value }))
+                    }
+                    required
+                  />
+                </label>
+                <label>
+                  <span>Password</span>
+                  <input
+                    type="password"
+                    value={authMode === "login" ? loginForm.password : registerForm.password}
+                    onChange={(event) =>
+                      authMode === "login"
+                        ? setLoginForm((current) => ({ ...current, password: event.target.value }))
+                        : setRegisterForm((current) => ({ ...current, password: event.target.value }))
+                    }
+                    required
+                    minLength={8}
+                    maxLength={128}
+                    pattern={authMode === "register" ? "(?=.*[A-Za-z])(?=.*\\d).{8,128}" : undefined}
+                    title={
+                      authMode === "register"
+                        ? "Password must be 8-128 characters and include at least one letter and one number."
+                        : undefined
+                    }
+                  />
+                </label>
+                {authMode === "register" && (
+                  <p className="form-hint">Use 8+ characters with at least one letter and one number.</p>
+                )}
+                <button type="submit" className="read-button parent-auth-submit" disabled={authLoading}>
+                  {authLoading
+                    ? authMode === "login"
+                      ? "Signing in..."
+                      : "Creating account..."
+                    : authMode === "login"
+                      ? "Sign In"
+                      : "Create Parent Account"}
+                </button>
+              </form>
+              {authError && <p className="error-text">{authError}</p>}
+            </div>
+          </article>
+
+          <aside className="parent-auth-brand">
+            <div>
+              <p className="hero-label">HKids Parent Hub</p>
+              <h3>Family Access</h3>
+              <p>Parents manage child profiles and create 4-digit reader pairing codes.</p>
+            </div>
+          </aside>
         </section>
       </main>
     );
@@ -225,9 +497,9 @@ function ParentPortal() {
       <header className="backoffice-header">
         <div>
           <p className="hero-label">HKids Parent Hub</p>
-          <h1>Weekly Reading Digest</h1>
+          <h1>Parent-Owned Family Access</h1>
           <p className="parent-caption">
-            Fast, actionable summary to keep routines healthy and screen time intentional.
+            Parent account controls child accounts, pairing access, and weekly reading digest.
           </p>
         </div>
         <div className="session-chip">
@@ -239,9 +511,221 @@ function ParentPortal() {
         </div>
       </header>
 
+      <section className="parent-child-management">
+        <div className="parent-child-management-header">
+          <h2>Child Accounts</h2>
+          <p>Create child profiles and generate 4-digit pairing codes to grant child reader access.</p>
+        </div>
+
+        <form className="parent-child-form" onSubmit={handleCreateChild}>
+          <label>
+            <span>Child Name</span>
+            <input
+              type="text"
+              value={childForm.name}
+              onChange={(event) => setChildForm((current) => ({ ...current, name: event.target.value }))}
+              maxLength={80}
+              required
+            />
+          </label>
+          <label>
+            <span>Age</span>
+            <input
+              type="number"
+              min={0}
+              max={18}
+              value={childForm.age}
+              onChange={(event) =>
+                setChildForm((current) => ({ ...current, age: Math.max(0, Math.min(18, Number(event.target.value) || 0)) }))
+              }
+              required
+            />
+          </label>
+          <label>
+            <span>Daily Limit (minutes)</span>
+            <input
+              type="number"
+              min={1}
+              max={1440}
+              value={childForm.dailyReadingLimitMinutes}
+              onChange={(event) =>
+                setChildForm((current) => ({
+                  ...current,
+                  dailyReadingLimitMinutes: Math.max(1, Math.min(1440, Number(event.target.value) || 1)),
+                }))
+              }
+              required
+            />
+          </label>
+          <button type="submit" className="read-button" disabled={childFormLoading}>
+            {childFormLoading ? "Creating..." : "Create Child Account"}
+          </button>
+        </form>
+
+        {childFormError && <p className="error-text">{childFormError}</p>}
+        {childrenError && <p className="error-text">{childrenError}</p>}
+
+        {childrenLoading && <div className="state-card">Loading child accounts...</div>}
+
+        {!childrenLoading && children.length === 0 && (
+          <div className="state-card">No child account yet. Create one to start reader access setup.</div>
+        )}
+
+        {!childrenLoading && children.length > 0 && (
+          <div className="parent-child-list">
+            {children.map((child) => {
+              const pairingState = pairingStateByChildId[child._id];
+              const expiresLabel = pairingState?.expiresAt
+                ? new Date(pairingState.expiresAt).toLocaleString()
+                : null;
+              const isEditing = editingChildId === child._id;
+              const isUpdating = updatingChildId === child._id;
+              const isDeleting = deletingChildId === child._id;
+              const isDeleteConfirmOpen = confirmDeleteChildId === child._id;
+              const childActionError = childActionErrorById[child._id];
+
+              return (
+                <article key={child._id} className="parent-child-card">
+                  <header>
+                    <div>
+                      <p className="story-language">Age {child.age}</p>
+                      <h3>{child.name}</h3>
+                    </div>
+                    <p className="story-meta">Daily limit: {child.dailyReadingLimitMinutes} min</p>
+                  </header>
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() => void handleGeneratePairingCode(child._id)}
+                    disabled={pairingState?.loading || isUpdating || isDeleting}
+                  >
+                    {pairingState?.loading ? "Generating code..." : "Generate 4-Digit Code"}
+                  </button>
+                  <div className="parent-child-actions">
+                    <button
+                      type="button"
+                      className="ghost-button"
+                      onClick={() => handleEditChildStart(child)}
+                      disabled={isUpdating || isDeleting}
+                    >
+                      {isEditing ? "Editing..." : "Edit Child"}
+                    </button>
+                    <button
+                      type="button"
+                      className="ghost-button danger"
+                      onClick={() => handleDeleteChildRequest(child._id)}
+                      disabled={isUpdating || isDeleting}
+                    >
+                      {isDeleting ? "Deleting..." : isDeleteConfirmOpen ? "Confirm Delete" : "Delete Child"}
+                    </button>
+                  </div>
+                  {isDeleteConfirmOpen && (
+                    <div className="parent-child-delete-confirm" role="alert">
+                      <p>
+                        Delete <strong>{child.name}</strong>? This disables reader devices linked to this child.
+                      </p>
+                      <div className="parent-child-delete-actions">
+                        <button
+                          type="button"
+                          className="ghost-button danger"
+                          onClick={() => void handleDeleteChildConfirm(child)}
+                          disabled={isDeleting}
+                        >
+                          {isDeleting ? "Deleting..." : "Yes, Delete"}
+                        </button>
+                        <button
+                          type="button"
+                          className="ghost-button"
+                          onClick={handleDeleteChildCancel}
+                          disabled={isDeleting}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {isEditing && (
+                    <form className="parent-child-edit-form" onSubmit={(event) => void handleUpdateChild(event, child._id)}>
+                      <label>
+                        <span>Child Name</span>
+                        <input
+                          type="text"
+                          value={editChildForm.name}
+                          onChange={(event) =>
+                            setEditChildForm((current) => ({ ...current, name: event.target.value }))
+                          }
+                          maxLength={80}
+                          required
+                        />
+                      </label>
+                      <label>
+                        <span>Age</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={18}
+                          value={editChildForm.age}
+                          onChange={(event) =>
+                            setEditChildForm((current) => ({
+                              ...current,
+                              age: Math.max(0, Math.min(18, Number(event.target.value) || 0)),
+                            }))
+                          }
+                          required
+                        />
+                      </label>
+                      <label>
+                        <span>Daily Limit (minutes)</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={1440}
+                          value={editChildForm.dailyReadingLimitMinutes}
+                          onChange={(event) =>
+                            setEditChildForm((current) => ({
+                              ...current,
+                              dailyReadingLimitMinutes: Math.max(
+                                1,
+                                Math.min(1440, Number(event.target.value) || 1)
+                              ),
+                            }))
+                          }
+                          required
+                        />
+                      </label>
+                      <div className="parent-child-edit-actions">
+                        <button type="submit" className="read-button" disabled={isUpdating}>
+                          {isUpdating ? "Saving..." : "Save Changes"}
+                        </button>
+                        <button
+                          type="button"
+                          className="ghost-button"
+                          onClick={handleEditChildCancel}
+                          disabled={isUpdating}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                  {childActionError && <p className="error-text">{childActionError}</p>}
+                  {pairingState?.error && <p className="error-text">{pairingState.error}</p>}
+                  {pairingState?.code && (
+                    <p className="parent-pairing-code">
+                      Code: <strong>{pairingState.code}</strong>
+                      {expiresLabel ? ` (expires ${expiresLabel})` : ""}
+                    </p>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       <section className="parent-controls">
         <label>
-          <span>Child View</span>
+          <span>Digest Scope</span>
           <select
             value={selectedChildId}
             onChange={(event) => setSelectedChildId(event.target.value)}
@@ -259,8 +743,6 @@ function ParentPortal() {
           Refresh Digest
         </button>
       </section>
-
-      {childrenError && <p className="error-text">{childrenError}</p>}
 
       {digestLoading && <div className="state-card">Loading weekly digest...</div>}
 
@@ -290,16 +772,14 @@ function ParentPortal() {
             </article>
           </section>
 
-          <section className="parent-next-step">
-            <h2>Next Step</h2>
-            <p>{digest.summary.nextStep}</p>
-            {generatedAtLabel && <small>Updated: {generatedAtLabel}</small>}
-          </section>
-
           <section className="parent-digest-list">
             {digest.children.length === 0 && <div className="state-card">No reading data yet for this period.</div>}
             {digest.children.map((childDigest) => {
-              const chartMax = Math.max(childDigest.dailyLimitMinutes, ...childDigest.dailyBreakdown.map((d) => d.minutes), 1);
+              const chartMax = Math.max(
+                childDigest.dailyLimitMinutes,
+                ...childDigest.dailyBreakdown.map((d) => d.minutes),
+                1
+              );
               return (
                 <article key={childDigest.childProfileId} className="parent-digest-card">
                   <header>

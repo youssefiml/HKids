@@ -20,9 +20,9 @@ const PairingCodeSchema = new Schema<IPairingCode>(
       type: String,
       required: true,
       trim: true,
-      uppercase: true,
-      minlength: 6,
-      maxlength: 6,
+      minlength: 4,
+      maxlength: 4,
+      match: [/^\d{4}$/, "Pairing code must be exactly 4 digits"],
       index: true,
     },
     parent: {

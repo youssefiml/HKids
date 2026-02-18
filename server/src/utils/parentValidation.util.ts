@@ -36,7 +36,7 @@ export const createPairingCodeSchema = z.object({
 });
 
 export const claimPairingCodeSchema = z.object({
-  code: z.string().trim().toUpperCase().length(6),
+  code: z.string().trim().regex(/^\d{4}$/, "Pairing code must be exactly 4 digits"),
   deviceId: z.string().trim().min(3).max(120),
   deviceName: z.string().trim().min(1).max(120).optional(),
 });
@@ -48,4 +48,3 @@ export const assignDeviceChildSchema = z.object({
 export const consumeReaderUsageSchema = z.object({
   minutes: z.number().int().min(1).max(120),
 });
-

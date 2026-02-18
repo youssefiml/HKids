@@ -50,14 +50,14 @@ const createRateLimiter = (config: RateLimitConfig) => {
 };
 
 export const rateLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  maxRequests: 100,
+  windowMs: 5 * 60 * 1000,
+  maxRequests: 500,
   message: "Too many requests, please try again later",
 });
 
 export const authRateLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  maxRequests: 10,
+  windowMs: 5 * 60 * 1000,
+  maxRequests: 5,
   message: "Too many authentication attempts, please try again later",
   keyGenerator: (req) => {
     const ip = req.ip || req.socket.remoteAddress || "unknown";

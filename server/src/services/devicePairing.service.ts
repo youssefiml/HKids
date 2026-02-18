@@ -5,7 +5,8 @@ import { AppError } from "../middlewares/error.middleware";
 import { assertChildBelongsToParent } from "./childProfile.service";
 import { ChildProfile, IChildProfile } from "../modules/children/childProfile.model";
 
-const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const PAIRING_CODE_MIN = 1000;
+const PAIRING_CODE_MAX = 9999;
 const USAGE_HISTORY_RETENTION_DAYS = 35;
 
 const getDateKeyUtc = (date = new Date()): string => date.toISOString().slice(0, 10);
@@ -50,12 +51,8 @@ const recordUsageHistoryMinutes = (
 };
 
 const generatePairingCodeValue = (): string => {
-  let code = "";
-  for (let i = 0; i < 6; i += 1) {
-    const index = Math.floor(Math.random() * CODE_ALPHABET.length);
-    code += CODE_ALPHABET[index];
-  }
-  return code;
+  const value = Math.floor(Math.random() * (PAIRING_CODE_MAX - PAIRING_CODE_MIN + 1)) + PAIRING_CODE_MIN;
+  return String(value);
 };
 
 const refreshCodeStatusIfExpired = async (pairingCode: any): Promise<void> => {
@@ -157,7 +154,7 @@ export const createPairingCode = async (
 };
 
 export const claimPairingCode = async (code: string, deviceId: string, deviceName?: string) => {
-  const normalizedCode = code.trim().toUpperCase();
+  const normalizedCode = code.trim();
   const normalizedDeviceId = deviceId.trim();
 
   const pairingCode = await PairingCode.findOne({

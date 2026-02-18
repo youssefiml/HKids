@@ -1,15 +1,14 @@
 import { useState } from "react";
 
-import BackofficeShell from "./pages/BackofficeShell";
+import ChildReaderPortal from "./pages/ChildReaderPortal";
 import ParentPortal from "./pages/ParentPortal";
-import PublicReader from "./pages/PublicReader";
 
 import "./styles/app/ModeSwitch.css";
 
-type ViewMode = "reader" | "backoffice" | "parent";
+type ViewMode = "reader" | "parent";
 
 function App() {
-  const [viewMode, setViewMode] = useState<ViewMode>("reader");
+  const [viewMode, setViewMode] = useState<ViewMode>("parent");
 
   return (
     <div>
@@ -19,14 +18,7 @@ function App() {
           className={viewMode === "reader" ? "mode-button active" : "mode-button"}
           onClick={() => setViewMode("reader")}
         >
-          Public Reader
-        </button>
-        <button
-          type="button"
-          className={viewMode === "backoffice" ? "mode-button active" : "mode-button"}
-          onClick={() => setViewMode("backoffice")}
-        >
-          Backoffice
+          Child Reader
         </button>
         <button
           type="button"
@@ -37,9 +29,8 @@ function App() {
         </button>
       </nav>
 
-      {viewMode === "reader" && <PublicReader />}
+      {viewMode === "reader" && <ChildReaderPortal />}
       {viewMode === "parent" && <ParentPortal />}
-      {viewMode === "backoffice" && <BackofficeShell />}
     </div>
   );
 }

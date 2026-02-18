@@ -6,9 +6,276 @@
   gap: 0.9rem;
 }
 
+.parent-auth-shell {
+  max-width: none;
+  margin: 0;
+  padding: clamp(1rem, 3vw, 2rem);
+  min-height: calc(100vh - 0.6rem);
+  display: grid;
+  place-items: center;
+  background: transparent;
+}
+
+.parent-auth-layout {
+  position: relative;
+  z-index: 1;
+  width: min(980px, 100%);
+  display: grid;
+  grid-template-columns: minmax(300px, 430px) minmax(220px, 1fr);
+  gap: clamp(1rem, 3vw, 2.4rem);
+  align-items: center;
+}
+
+.parent-auth-card.auth-card {
+  margin: 0;
+  max-width: none;
+  border-radius: 26px;
+  border: 2px solid rgba(22, 67, 111, 0.25);
+  box-shadow:
+    -14px 11px 0 rgba(26, 68, 108, 0.24),
+    0 16px 34px rgba(17, 46, 74, 0.2);
+  overflow: hidden;
+  background: #f5f7fa;
+  padding: 0;
+}
+
+.parent-auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #fdfdfd;
+  border-bottom: 1px solid rgba(24, 64, 100, 0.15);
+}
+
+.parent-auth-tab {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.76rem;
+  padding: 0.62rem 0.7rem;
+  background: transparent;
+  color: #1b517f;
+}
+
+.parent-auth-tab.active {
+  color: #ffffff;
+  background: #153f66;
+}
+
+.parent-auth-content {
+  padding: 1rem;
+}
+
+.parent-auth-content h2 {
+  margin: 0;
+}
+
+.parent-auth-content p {
+  margin-top: 0.45rem;
+}
+
+.parent-auth-form {
+  margin-top: 0.8rem;
+}
+
+.parent-auth-form .form-hint {
+  margin-top: -0.1rem;
+}
+
+.read-button.parent-auth-submit {
+  margin-top: 0.62rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe279, #ffcd32);
+  color: #1f1f1f;
+  box-shadow: 0 10px 18px rgba(255, 189, 54, 0.33);
+}
+
+.parent-auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #113f67;
+}
+
+.parent-auth-brand h3 {
+  margin: 0.2rem 0 0;
+  font-family: var(--font-title);
+  font-size: clamp(1.7rem, 2.2vw, 2.4rem);
+  line-height: 1.05;
+}
+
+.parent-auth-brand p {
+  margin: 0.45rem 0 0;
+  max-width: 26ch;
+  line-height: 1.45;
+  color: rgba(17, 63, 103, 0.9);
+  font-weight: 600;
+}
+
 .parent-caption {
   margin: 0.42rem 0 0;
   color: #2f6188;
+}
+
+.parent-child-management {
+  border-radius: 16px;
+  border: 1px solid rgba(29, 87, 128, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 30px rgba(33, 88, 129, 0.1);
+  padding: 0.95rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.parent-child-management-header h2 {
+  margin: 0;
+  color: #12456f;
+  font-family: var(--font-title);
+}
+
+.parent-child-management-header p {
+  margin: 0.36rem 0 0;
+  color: #2f6188;
+}
+
+.form-hint {
+  margin: -0.2rem 0 0;
+  color: #2f6188;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.parent-child-form {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  align-items: end;
+}
+
+.parent-child-form label {
+  display: grid;
+  gap: 0.3rem;
+  color: #225982;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.parent-child-form input {
+  border: 1px solid rgba(34, 95, 138, 0.2);
+  border-radius: 12px;
+  padding: 0.62rem 0.74rem;
+  font-family: inherit;
+  color: #12456e;
+  background: #ffffff;
+}
+
+.parent-child-list {
+  display: grid;
+  gap: 0.72rem;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.parent-child-card {
+  border-radius: 14px;
+  border: 1px solid rgba(30, 90, 131, 0.15);
+  background: #ffffff;
+  padding: 0.82rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.parent-child-card header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.parent-child-card h3 {
+  margin: 0.2rem 0 0;
+  color: #12456f;
+  font-family: var(--font-title);
+}
+
+.parent-child-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.parent-child-actions .ghost-button {
+  flex: 1 1 120px;
+}
+
+.parent-child-delete-confirm {
+  margin-top: 0.2rem;
+  border-radius: 10px;
+  border: 1px solid rgba(150, 37, 58, 0.24);
+  background: rgba(255, 236, 241, 0.78);
+  color: #7f2235;
+  padding: 0.55rem 0.65rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.parent-child-delete-confirm p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.parent-child-delete-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.parent-child-edit-form {
+  margin-top: 0.2rem;
+  padding-top: 0.62rem;
+  border-top: 1px dashed rgba(31, 89, 130, 0.25);
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: end;
+}
+
+.parent-child-edit-form label {
+  display: grid;
+  gap: 0.28rem;
+  color: #225982;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.parent-child-edit-form input {
+  border: 1px solid rgba(34, 95, 138, 0.2);
+  border-radius: 12px;
+  padding: 0.56rem 0.68rem;
+  font-family: inherit;
+  color: #12456e;
+  background: #ffffff;
+}
+
+.parent-child-edit-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.parent-child-edit-actions .read-button {
+  margin-top: 0;
+}
+
+.parent-pairing-code {
+  margin: 0;
+  border-radius: 10px;
+  border: 1px dashed rgba(27, 84, 126, 0.35);
+  background: rgba(233, 247, 255, 0.8);
+  color: #205f87;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.88rem;
 }
 
 .parent-controls {
@@ -69,33 +336,6 @@
   line-height: 1;
   color: #0f466f;
   font-family: var(--font-title);
-}
-
-.parent-next-step {
-  border-radius: 16px;
-  border: 1px solid rgba(29, 87, 128, 0.14);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 14px 30px rgba(33, 88, 129, 0.1);
-  padding: 0.95rem;
-}
-
-.parent-next-step h2 {
-  margin: 0;
-  color: #114267;
-  font-family: var(--font-title);
-}
-
-.parent-next-step p {
-  margin: 0.45rem 0 0;
-  color: #2b6188;
-}
-
-.parent-next-step small {
-  display: block;
-  margin-top: 0.58rem;
-  color: #3b6f95;
-  font-size: 0.8rem;
-  font-weight: 700;
 }
 
 .parent-digest-list {
@@ -179,8 +419,26 @@
 }
 
 @media (max-width: 760px) {
+  .parent-auth-layout {
+    grid-template-columns: 1fr;
+    max-width: 430px;
+  }
+
+  .parent-auth-brand {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .parent-auth-brand p {
+    max-width: none;
+  }
+
   .parent-controls {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .parent-child-edit-form {
+    grid-template-columns: 1fr;
   }
 }

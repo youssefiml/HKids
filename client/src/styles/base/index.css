@@ -26,10 +26,10 @@ body {
   font-family: var(--font-body);
   color: var(--ink-strong);
   background:
-    radial-gradient(circle at 12% 12%, rgba(255, 224, 150, 0.65) 0, transparent 34%),
-    radial-gradient(circle at 88% 18%, rgba(153, 236, 244, 0.66) 0, transparent 37%),
-    radial-gradient(circle at 45% 92%, rgba(255, 180, 190, 0.36) 0, transparent 28%),
-    linear-gradient(180deg, #f0fbff 0%, #f5faff 54%, #fff7ec 100%);
+    radial-gradient(circle at 50% -14%, rgba(104, 188, 255, 0.18) 0, transparent 48%),
+    radial-gradient(circle at 6% 88%, rgba(255, 200, 124, 0.16) 0, transparent 36%),
+    radial-gradient(circle at 95% 82%, rgba(165, 232, 255, 0.16) 0, transparent 34%),
+    linear-gradient(180deg, #f8fcff 0%, #f4f9ff 55%, #f2f7ff 100%);
 }
 
 #root {

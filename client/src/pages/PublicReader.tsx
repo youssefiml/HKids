@@ -3,18 +3,10 @@ import { useNavigate } from "react-router-dom";
 
 import { fetchPublicBooks, fetchPublicCategories } from "../api/publicApi";
 import type { BookLanguage, StoryBook, StoryCategory } from "../api/publicApi";
+import type { ReaderSession } from "../utils/readerSession";
 import StoryCover from "./StoryCover";
 
 import "../styles/pages/PublicReader.css";
-
-const AGE_FILTERS: Array<{ label: string; value: number | "all" }> = [
-  { label: "All Ages", value: "all" },
-  { label: "Age 3+", value: 3 },
-  { label: "Age 5+", value: 5 },
-  { label: "Age 7+", value: 7 },
-  { label: "Age 9+", value: 9 },
-  { label: "Age 12+", value: 12 },
-];
 
 const LANGUAGE_FILTERS: Array<{ label: string; value: BookLanguage | "all" }> = [
   { label: "All Languages", value: "all" },
@@ -29,12 +21,16 @@ const LANGUAGE_LABELS: Record<BookLanguage, string> = {
   ar: "Arabic",
 };
 
-function PublicReader() {
+type Props = {
+  readerSession: ReaderSession;
+  onResetSession: () => void;
+};
+
+function PublicReader({ readerSession, onResetSession }: Props) {
   const navigate = useNavigate();
   const [books, setBooks] = useState<StoryBook[]>([]);
   const [categories, setCategories] = useState<StoryCategory[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedAge, setSelectedAge] = useState<number | "all">("all");
   const [selectedLanguage, setSelectedLanguage] = useState<BookLanguage | "all">("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
@@ -49,7 +45,7 @@ function PublicReader() {
     const loadCategories = async () => {
       setLoadingCategories(true);
       try {
-        const data = await fetchPublicCategories();
+        const data = await fetchPublicCategories(readerSession.deviceId);
         if (!cancelled) {
           setCategories(data);
         }
@@ -68,7 +64,7 @@ function PublicReader() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [readerSession.deviceId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,11 +73,13 @@ function PublicReader() {
       setErrorMessage(null);
 
       try {
-        const data = await fetchPublicBooks({
-          age: selectedAge === "all" ? undefined : selectedAge,
+        const data = await fetchPublicBooks(
+          {
           lang: selectedLanguage === "all" ? undefined : selectedLanguage,
           category: selectedCategory === "all" ? undefined : selectedCategory,
-        });
+          },
+          readerSession.deviceId
+        );
         if (!cancelled) {
           setBooks(data);
         }
@@ -101,7 +99,7 @@ function PublicReader() {
     return () => {
       cancelled = true;
     };
-  }, [selectedAge, selectedLanguage, selectedCategory, reloadSignal]);
+  }, [selectedLanguage, selectedCategory, reloadSignal, readerSession.deviceId]);
 
   const fallbackCategories = useMemo(() => {
     const mappedCategories = new Map<string, StoryCategory>();
@@ -176,19 +174,31 @@ function PublicReader() {
 
       <header className="reading-hero">
         <div className="reading-hero-copy">
+          <div className="reader-session-strip">
+            <div className="session-chip">
+              <span>{readerSession.childName}</span>
+              <small>child</small>
+            </div>
+            <button type="button" className="ghost-button" onClick={onResetSession}>
+              Switch Child
+            </button>
+          </div>
           <p className="hero-label">HKids Reading Club</p>
           <h1>Read, Imagine, and Grow One Story at a Time</h1>
           <p className="hero-subtitle">
-            A playful story library for children. Discover age-friendly books, choose a language,
+            A playful story library for children. Discover books, choose a language,
             and open each story in a focused reading mode.
           </p>
           <div className="hero-actions">
             <button
               type="button"
               className="hero-action primary"
-              onClick={() => setSelectedAge(5)}
+              onClick={() => {
+                setSearchTerm("");
+                setSelectedCategory("all");
+              }}
             >
-              Start with Age 5+
+              Browse All Stories
             </button>
             <button
               type="button"
@@ -227,22 +237,6 @@ function PublicReader() {
             onChange={(event) => setSearchTerm(event.target.value)}
           />
         </label>
-
-        <div className="filter-group">
-          <p>Age Group</p>
-          <div className="pill-row">
-            {AGE_FILTERS.map((filter) => (
-              <button
-                key={filter.label}
-                className={selectedAge === filter.value ? "pill active" : "pill"}
-                onClick={() => setSelectedAge(filter.value)}
-                type="button"
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
-        </div>
 
         <div className="filter-group">
           <p>Language</p>
@@ -333,6 +327,9 @@ function PublicReader() {
               <p>{errorMessage}</p>
               <button className="retry-button" type="button" onClick={() => setReloadSignal((v) => v + 1)}>
                 Try again
+              </button>
+              <button className="ghost-button" type="button" onClick={onResetSession}>
+                Pair Another Child
               </button>
             </div>
           )}
