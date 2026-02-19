@@ -78,13 +78,13 @@
 }
 
 .reader-main-stage {
-  width: min(1180px, 100%);
+  width: min(980px, 100%);
   margin: 0 auto;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: clamp(0.5rem, 2vw, 1.2rem);
-  min-height: 62vh;
+  gap: clamp(0.3rem, 1.5vw, 0.85rem);
+  min-height: auto;
 }
 
 .reader-arrow-btn {
@@ -107,22 +107,23 @@
 }
 
 .reader-content {
-  width: min(780px, 100%);
+  width: min(640px, 100%);
   margin: 0 auto;
   display: grid;
-  gap: 0.95rem;
+  gap: 0.5rem;
 }
 
 .reader-stage {
-  min-height: clamp(280px, 54vh, 620px);
+  min-height: clamp(280px, 48vh, 560px);
   display: grid;
   place-items: center;
 }
 
 .reader-stage img {
   display: block;
-  width: 100%;
-  max-height: clamp(260px, 52vh, 560px);
+  width: auto;
+  max-width: 100%;
+  max-height: clamp(280px, 60vh, 640px);
   object-fit: contain;
   object-position: center;
 }
@@ -151,7 +152,7 @@
 
 .reader-progress {
   width: min(620px, 100%);
-  margin: auto auto 0;
+  margin: 0.2rem auto 0;
   display: grid;
   gap: 0.45rem;
   text-align: center;
