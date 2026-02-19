@@ -8,6 +8,20 @@ import { ChildProfile, IChildProfile } from "../modules/children/childProfile.mo
 const PAIRING_CODE_MIN = 1000;
 const PAIRING_CODE_MAX = 9999;
 const USAGE_HISTORY_RETENTION_DAYS = 35;
+const FALLBACK_PAIRING_TTL_MINUTES = 15;
+
+const parseDefaultPairingTtlMinutes = (): number => {
+  const rawValue = process.env.PAIRING_CODE_TTL_MINUTES;
+  const parsed = rawValue ? Number(rawValue) : FALLBACK_PAIRING_TTL_MINUTES;
+  if (!Number.isFinite(parsed)) {
+    return FALLBACK_PAIRING_TTL_MINUTES;
+  }
+
+  const normalized = Math.floor(parsed);
+  return Math.min(Math.max(normalized, 1), 60);
+};
+
+const DEFAULT_PAIRING_TTL_MINUTES = parseDefaultPairingTtlMinutes();
 
 const getDateKeyUtc = (date = new Date()): string => date.toISOString().slice(0, 10);
 
@@ -116,7 +130,7 @@ const buildReaderContext = async (device: any, childProfile: IChildProfile) => {
 export const createPairingCode = async (
   parentId: string,
   childProfileId: string,
-  expiresInMinutes: number = 10
+  expiresInMinutes: number = DEFAULT_PAIRING_TTL_MINUTES
 ) => {
   const childProfile = await assertChildBelongsToParent(parentId, childProfileId);
   const expiresAt = new Date(Date.now() + expiresInMinutes * 60 * 1000);

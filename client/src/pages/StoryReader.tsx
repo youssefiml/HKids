@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { StoryBook } from "../api/publicApi";
 import { fetchPublicBookById } from "../api/publicApi";
@@ -60,10 +60,21 @@ const formatDuration = (totalSeconds: number): string => {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 };
 
+const preloadImage = (url: string) => {
+  if (!url) {
+    return;
+  }
+
+  const image = new Image();
+  image.decoding = "async";
+  image.src = url;
+};
+
 function StoryReader() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const readerSession = useMemo(() => getStoredReaderSession(), []);
+  const preloadedImagesRef = useRef<Set<string>>(new Set());
 
   const [story, setStory] = useState<Story | null>(null);
   const [pageCursor, setPageCursor] = useState(0);
@@ -128,6 +139,31 @@ function StoryReader() {
   const currentPage = useMemo(() => story?.pages[pageCursor], [story, pageCursor]);
   const currentPageHasImage = Boolean(currentPage?.hasImage);
   const currentPageHasText = Boolean(currentPage?.hasText);
+
+  useEffect(() => {
+    preloadedImagesRef.current.clear();
+  }, [story?.id]);
+
+  useEffect(() => {
+    if (!story?.pages.length) {
+      return;
+    }
+
+    const targetIndexes = [pageCursor, pageCursor + 1, pageCursor - 1, pageCursor + 2];
+    targetIndexes.forEach((index) => {
+      if (index < 0 || index >= story.pages.length) {
+        return;
+      }
+
+      const imageUrl = story.pages[index]?.imageUrl?.trim() ?? "";
+      if (!imageUrl || preloadedImagesRef.current.has(imageUrl)) {
+        return;
+      }
+
+      preloadedImagesRef.current.add(imageUrl);
+      preloadImage(imageUrl);
+    });
+  }, [story, pageCursor]);
 
   useEffect(() => {
     if (!story || sessionPaused || focusSecondsRemaining <= 0) {
@@ -241,7 +277,12 @@ function StoryReader() {
         <article className="reader-content">
           <section className="reader-stage">
             {currentPageHasImage ? (
-              <img src={currentPage?.imageUrl} alt={`Page ${currentPage?.index}`} />
+              <img
+                src={currentPage?.imageUrl}
+                alt={`Page ${currentPage?.index}`}
+                loading="eager"
+                decoding="async"
+              />
             ) : (
               <div className="reader-stage-placeholder">
                 <p>{currentPageHasText ? "Text-only page" : "Image not available on this page"}</p>

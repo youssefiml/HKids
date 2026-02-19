@@ -1,4 +1,5 @@
 import type { BookLanguage, StoryBook } from "./publicApi";
+import { optimizeImageForUpload } from "../utils/imageUpload";
 
 export type UserRole = "admin" | "editor";
 
@@ -317,7 +318,15 @@ export const setAdminStoryPublished = async (storyId: string, published: boolean
 };
 
 export const uploadAdminStoryImage = async (file: File, token: string) => {
-  const lowerName = file.name.toLowerCase();
+  const optimizedFile = await optimizeImageForUpload(file, {
+    maxWidth: 1920,
+    maxHeight: 1920,
+    quality: 0.82,
+    preferredType: "image/webp",
+    keepOriginalIfSmaller: true,
+  });
+
+  const lowerName = optimizedFile.name.toLowerCase();
   const fallbackType = lowerName.endsWith(".png")
     ? "image/png"
     : lowerName.endsWith(".webp")
@@ -331,9 +340,9 @@ export const uploadAdminStoryImage = async (file: File, token: string) => {
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
-      "Content-Type": file.type || fallbackType,
+      "Content-Type": optimizedFile.type || fallbackType,
     },
-    body: file,
+    body: optimizedFile,
   });
 
   return parseResponse<AdminUploadedImage>(response);

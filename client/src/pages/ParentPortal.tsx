@@ -449,7 +449,7 @@ function ParentPortal() {
     }));
 
     try {
-      const pairing = await createParentPairingCode(token, childProfileId, 15);
+      const pairing = await createParentPairingCode(token, childProfileId);
       setPairingStateByChildId((current) => ({
         ...current,
         [childProfileId]: {

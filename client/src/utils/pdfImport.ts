@@ -38,19 +38,9 @@ const toSafeBaseName = (filename: string): string => {
   return sanitized || "story";
 };
 
-const canvasToJpegBlob = (canvas: HTMLCanvasElement): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error("Failed to convert PDF page to image."));
-          return;
-        }
-        resolve(blob);
-      },
-      "image/jpeg",
-      0.84
-    );
+const canvasToBlob = (canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob | null> => {
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), type, quality);
   });
 };
 
@@ -99,9 +89,21 @@ export const extractPdfPagesAsImages = async (pdfFile: File): Promise<RenderedPd
       }
 
       await page.render({ canvasContext: context, viewport, canvas }).promise;
-      const blob = await canvasToJpegBlob(canvas);
-      const file = new File([blob], `${baseName}-page-${String(pageNumber).padStart(2, "0")}.jpg`, {
-        type: "image/jpeg",
+      let blob = await canvasToBlob(canvas, "image/webp", 0.82);
+      let extension = "webp";
+
+      if (!blob || (blob.type && blob.type !== "image/webp")) {
+        blob = await canvasToBlob(canvas, "image/jpeg", 0.84);
+        extension = "jpg";
+      }
+
+      if (!blob) {
+        throw new Error("Failed to convert PDF page to image.");
+      }
+
+      const mimeType = extension === "webp" ? "image/webp" : "image/jpeg";
+      const file = new File([blob], `${baseName}-page-${String(pageNumber).padStart(2, "0")}.${extension}`, {
+        type: mimeType,
       });
 
       renderedPages.push({ pageNumber, file });

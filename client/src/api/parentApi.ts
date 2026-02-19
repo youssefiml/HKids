@@ -1,3 +1,5 @@
+import { optimizeImageForUpload } from "../utils/imageUpload";
+
 export interface ParentAccount {
   id: string;
   fullName: string;
@@ -226,7 +228,15 @@ export const deleteParentChild = async (token: string, childProfileId: string) =
 };
 
 export const uploadParentChildAvatar = async (token: string, childProfileId: string, file: File) => {
-  const lowerName = file.name.toLowerCase();
+  const optimizedFile = await optimizeImageForUpload(file, {
+    maxWidth: 640,
+    maxHeight: 640,
+    quality: 0.82,
+    preferredType: "image/webp",
+    keepOriginalIfSmaller: true,
+  });
+
+  const lowerName = optimizedFile.name.toLowerCase();
   const fallbackType = lowerName.endsWith(".png")
     ? "image/png"
     : lowerName.endsWith(".webp")
@@ -240,9 +250,9 @@ export const uploadParentChildAvatar = async (token: string, childProfileId: str
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
-      "Content-Type": file.type || fallbackType,
+      "Content-Type": optimizedFile.type || fallbackType,
     },
-    body: file,
+    body: optimizedFile,
   });
 
   return parseResponse<ParentChildProfile>(response);

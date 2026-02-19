@@ -53,6 +53,7 @@ MONGO_URI=mongodb://localhost:27017/hkids
 JWT_SECRET=change_me_in_production
 JWT_EXPIRES_IN=7d
 PARENT_JWT_EXPIRES_IN=12h
+PAIRING_CODE_TTL_MINUTES=15
 PORT=5000
 NODE_ENV=development
 FRONTEND_URL=http://localhost:5173,http://localhost:3000
