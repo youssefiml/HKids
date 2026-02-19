@@ -128,6 +128,124 @@
   color: #2f6188;
 }
 
+.parent-profile-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(15, 36, 56, 0.62);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.parent-profile-modal {
+  width: min(900px, 100%);
+  max-height: 92vh;
+  overflow: auto;
+  border-radius: 20px;
+  border: 1px solid rgba(29, 87, 128, 0.2);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 225, 147, 0.34), transparent 38%),
+    linear-gradient(165deg, #ffffff, #edf8ff);
+  box-shadow: 0 24px 52px rgba(15, 39, 62, 0.38);
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.parent-profile-modal-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.parent-profile-modal-head h2 {
+  margin: 0;
+  color: #12456f;
+  font-family: var(--font-title);
+}
+
+.parent-profile-modal-head p {
+  margin: 0.34rem 0 0;
+  color: #2f6188;
+}
+
+.parent-profile-modal-close {
+  border: 1px solid rgba(33, 95, 139, 0.25);
+  background: #ffffff;
+  color: #165886;
+  border-radius: 10px;
+  font-weight: 800;
+  padding: 0.44rem 0.7rem;
+  cursor: pointer;
+}
+
+.parent-profile-form {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  align-items: end;
+}
+
+.parent-profile-form label {
+  display: grid;
+  gap: 0.3rem;
+  color: #225982;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.parent-profile-form input {
+  border: 1px solid rgba(34, 95, 138, 0.2);
+  border-radius: 12px;
+  padding: 0.62rem 0.74rem;
+  font-family: inherit;
+  color: #12456e;
+  background: #ffffff;
+}
+
+.parent-profile-error {
+  margin: -0.2rem 0 0;
+}
+
+.parent-profile-success {
+  margin: -0.2rem 0 0;
+  color: #1f6d46;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.parent-profile-divider {
+  border-top: 1px dashed rgba(31, 89, 130, 0.25);
+  margin-top: 0.1rem;
+  padding-top: 0.15rem;
+}
+
+.parent-password-form {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  align-items: end;
+}
+
+.parent-password-form label {
+  display: grid;
+  gap: 0.3rem;
+  color: #225982;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.parent-password-form input {
+  border: 1px solid rgba(34, 95, 138, 0.2);
+  border-radius: 12px;
+  padding: 0.62rem 0.74rem;
+  font-family: inherit;
+  color: #12456e;
+  background: #ffffff;
+}
+
 .parent-child-management {
   border-radius: 16px;
   border: 1px solid rgba(29, 87, 128, 0.14);
@@ -202,10 +320,61 @@
   gap: 0.6rem;
 }
 
+.parent-child-header-main {
+  display: flex;
+  align-items: center;
+  gap: 0.62rem;
+}
+
+.parent-child-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(33, 93, 134, 0.22);
+  background: linear-gradient(140deg, #ffdc7b, #ff9665);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.parent-child-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.parent-child-avatar span {
+  font-family: var(--font-title);
+  color: #ffffff;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
 .parent-child-card h3 {
   margin: 0.2rem 0 0;
   color: #12456f;
   font-family: var(--font-title);
+}
+
+.parent-child-avatar-upload {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  border: 1px solid rgba(33, 95, 139, 0.25);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #165886;
+  font-weight: 800;
+  font-size: 0.82rem;
+  padding: 0.38rem 0.64rem;
+  cursor: pointer;
+}
+
+.parent-child-avatar-upload input {
+  display: none;
 }
 
 .parent-child-actions {
@@ -451,6 +620,32 @@
   .parent-controls {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .parent-profile-modal-overlay {
+    padding: 0.72rem;
+  }
+
+  .parent-profile-modal {
+    border-radius: 16px;
+    padding: 0.82rem;
+  }
+
+  .parent-profile-modal-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .parent-profile-form {
+    grid-template-columns: 1fr;
+  }
+
+  .parent-password-form {
+    grid-template-columns: 1fr;
+  }
+
+  .parent-child-header-main {
+    align-items: flex-start;
   }
 
   .parent-child-edit-form {

@@ -11,6 +11,7 @@ type ChildProfileInput = {
 };
 
 type ChildProfileUpdateInput = Partial<ChildProfileInput> & {
+  avatarImageUrl?: string;
   isActive?: boolean;
 };
 
@@ -48,6 +49,9 @@ export const updateChildProfile = async (parentId: string, childProfileId: strin
   }
   if (payload.dailyReadingLimitMinutes !== undefined) {
     childProfile.dailyReadingLimitMinutes = payload.dailyReadingLimitMinutes;
+  }
+  if (payload.avatarImageUrl !== undefined) {
+    childProfile.avatarImageUrl = payload.avatarImageUrl.trim();
   }
   if (payload.isActive !== undefined) {
     childProfile.isActive = payload.isActive;
@@ -97,4 +101,3 @@ export const assertChildBelongsToParent = async (parentId: string, childProfileI
 
   return childProfile;
 };
-

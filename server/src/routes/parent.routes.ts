@@ -1,4 +1,4 @@
-import { Router } from "express";
+import express, { Router } from "express";
 import { protectParent } from "../middlewares/parentAuth.middleware";
 import { validate } from "../utils/validation.util";
 import {
@@ -11,6 +11,7 @@ import {
   createChildProfileController,
   deleteChildProfileController,
   listChildProfilesController,
+  uploadChildAvatarController,
   updateChildProfileController,
 } from "../controllers/parentChild.controller";
 import {
@@ -26,6 +27,7 @@ router.use(protectParent);
 
 router.get("/children", listChildProfilesController);
 router.post("/children", validate(childProfileCreateSchema), createChildProfileController);
+router.post("/children/:id/avatar", express.raw({ type: "image/*", limit: "6mb" }), uploadChildAvatarController);
 router.patch("/children/:id", validate(childProfileUpdateSchema), updateChildProfileController);
 router.delete("/children/:id", deleteChildProfileController);
 

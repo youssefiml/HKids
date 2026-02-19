@@ -10,6 +10,9 @@ import {
   listParentChildren,
   loginParent,
   registerParent,
+  updateParentMe,
+  updateParentPassword,
+  uploadParentChildAvatar,
   updateParentChild,
 } from "../api/parentApi";
 import type {
@@ -59,6 +62,19 @@ function ParentPortal() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [loginForm, setLoginForm] = useState({ email: "parent1@hkids.com", password: "Parent1234" });
   const [registerForm, setRegisterForm] = useState({ email: "", password: "" });
+  const [parentProfileForm, setParentProfileForm] = useState({ fullName: "", email: "" });
+  const [parentProfileSaving, setParentProfileSaving] = useState(false);
+  const [parentProfileError, setParentProfileError] = useState<string | null>(null);
+  const [parentProfileSuccess, setParentProfileSuccess] = useState<string | null>(null);
+  const [parentPasswordForm, setParentPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [parentPasswordSaving, setParentPasswordSaving] = useState(false);
+  const [parentPasswordError, setParentPasswordError] = useState<string | null>(null);
+  const [parentPasswordSuccess, setParentPasswordSuccess] = useState<string | null>(null);
+  const [isParentProfileModalOpen, setIsParentProfileModalOpen] = useState(false);
 
   const [children, setChildren] = useState<ParentChildProfile[]>([]);
   const [childrenLoading, setChildrenLoading] = useState(false);
@@ -81,6 +97,7 @@ function ParentPortal() {
   const [confirmDeleteChildId, setConfirmDeleteChildId] = useState<string | null>(null);
   const [updatingChildId, setUpdatingChildId] = useState<string | null>(null);
   const [deletingChildId, setDeletingChildId] = useState<string | null>(null);
+  const [uploadingChildAvatarId, setUploadingChildAvatarId] = useState<string | null>(null);
   const [childActionErrorById, setChildActionErrorById] = useState<Record<string, string | null>>({});
 
   const [digest, setDigest] = useState<ParentWeeklyDigest | null>(null);
@@ -134,6 +151,39 @@ function ParentPortal() {
       cancelled = true;
     };
   }, [token]);
+
+  useEffect(() => {
+    if (!parent) {
+      setParentProfileForm({ fullName: "", email: "" });
+      return;
+    }
+
+    setParentProfileForm({
+      fullName: parent.fullName ?? "",
+      email: parent.email,
+    });
+  }, [parent]);
+
+  useEffect(() => {
+    if (!isParentProfileModalOpen) {
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsParentProfileModalOpen(false);
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isParentProfileModalOpen]);
 
   const loadChildren = useCallback(async () => {
     if (!token || !parent) {
@@ -236,6 +286,127 @@ function ParentPortal() {
     setEditingChildId(null);
     setConfirmDeleteChildId(null);
     setChildActionErrorById({});
+    setUploadingChildAvatarId(null);
+    setParentProfileSaving(false);
+    setParentProfileError(null);
+    setParentProfileSuccess(null);
+    setParentPasswordSaving(false);
+    setParentPasswordError(null);
+    setParentPasswordSuccess(null);
+    setParentPasswordForm({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setIsParentProfileModalOpen(false);
+  };
+
+  const handleOpenParentProfileModal = () => {
+    setParentProfileError(null);
+    setParentProfileSuccess(null);
+    setParentPasswordError(null);
+    setParentPasswordSuccess(null);
+    setIsParentProfileModalOpen(true);
+  };
+
+  const handleCloseParentProfileModal = () => {
+    setIsParentProfileModalOpen(false);
+  };
+
+  const handleParentProfileSave = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!token || !parent) {
+      return;
+    }
+
+    const payload = {
+      fullName: parentProfileForm.fullName.trim(),
+      email: parentProfileForm.email.trim().toLowerCase(),
+    };
+
+    if (!payload.fullName) {
+      setParentProfileError("Parent full name is required.");
+      setParentProfileSuccess(null);
+      return;
+    }
+
+    setParentProfileSaving(true);
+    setParentProfileError(null);
+    setParentProfileSuccess(null);
+
+    try {
+      const updatedParent = await updateParentMe(token, payload);
+      setParent(updatedParent);
+      setParentProfileSuccess("Profile updated.");
+    } catch (error) {
+      setParentProfileError(error instanceof Error ? error.message : "Could not update parent profile.");
+    } finally {
+      setParentProfileSaving(false);
+    }
+  };
+
+  const handleParentPasswordSave = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!token || !parent) {
+      return;
+    }
+
+    if (!PARENT_REGISTER_PASSWORD_PATTERN.test(parentPasswordForm.newPassword)) {
+      setParentPasswordError("New password must be 8-128 chars and include at least one letter and one number.");
+      setParentPasswordSuccess(null);
+      return;
+    }
+
+    if (parentPasswordForm.newPassword !== parentPasswordForm.confirmPassword) {
+      setParentPasswordError("New password and confirm password do not match.");
+      setParentPasswordSuccess(null);
+      return;
+    }
+
+    setParentPasswordSaving(true);
+    setParentPasswordError(null);
+    setParentPasswordSuccess(null);
+
+    try {
+      await updateParentPassword(token, {
+        currentPassword: parentPasswordForm.currentPassword,
+        newPassword: parentPasswordForm.newPassword,
+      });
+      setParentPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      setParentPasswordSuccess("Password updated.");
+    } catch (error) {
+      setParentPasswordError(error instanceof Error ? error.message : "Could not update password.");
+    } finally {
+      setParentPasswordSaving(false);
+    }
+  };
+
+  const handleChildAvatarUpload = async (childProfileId: string, file: File | null) => {
+    if (!file || !token || !parent) {
+      return;
+    }
+
+    setUploadingChildAvatarId(childProfileId);
+    setChildActionErrorById((current) => ({ ...current, [childProfileId]: null }));
+
+    try {
+      const updatedChild = await uploadParentChildAvatar(token, childProfileId, file);
+      setChildren((current) =>
+        current.map((child) => (child._id === childProfileId ? { ...child, ...updatedChild } : child))
+      );
+      setReloadSignal((value) => value + 1);
+    } catch (error) {
+      setChildActionErrorById((current) => ({
+        ...current,
+        [childProfileId]: error instanceof Error ? error.message : "Could not upload child picture.",
+      }));
+    } finally {
+      setUploadingChildAvatarId(null);
+    }
   };
 
   const handleCreateChild = async (event: FormEvent) => {
@@ -510,13 +681,130 @@ function ParentPortal() {
           </p>
         </div>
         <div className="session-chip">
-          <span>{parent.email}</span>
+          <span>{parent.fullName || parent.email}</span>
           <small>parent</small>
+          <button type="button" className="ghost-button" onClick={handleOpenParentProfileModal}>
+            Profile
+          </button>
           <button type="button" className="ghost-button" onClick={handleLogout}>
             Logout
           </button>
         </div>
       </header>
+
+      {isParentProfileModalOpen && (
+        <div
+          className="parent-profile-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Parent profile settings"
+          onClick={handleCloseParentProfileModal}
+        >
+          <section className="parent-profile-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="parent-profile-modal-head">
+              <div>
+                <h2>Parent Profile</h2>
+                <p>Update your account information and password.</p>
+              </div>
+              <button type="button" className="parent-profile-modal-close" onClick={handleCloseParentProfileModal}>
+                Close
+              </button>
+            </div>
+
+            <form className="parent-profile-form" onSubmit={handleParentProfileSave}>
+              <label>
+                <span>Full Name</span>
+                <input
+                  type="text"
+                  value={parentProfileForm.fullName}
+                  onChange={(event) => {
+                    setParentProfileForm((current) => ({ ...current, fullName: event.target.value }));
+                    setParentProfileError(null);
+                    setParentProfileSuccess(null);
+                  }}
+                  maxLength={100}
+                  required
+                />
+              </label>
+              <label>
+                <span>Email</span>
+                <input
+                  type="email"
+                  value={parentProfileForm.email}
+                  onChange={(event) => {
+                    setParentProfileForm((current) => ({ ...current, email: event.target.value }));
+                    setParentProfileError(null);
+                    setParentProfileSuccess(null);
+                  }}
+                  required
+                />
+              </label>
+              <button type="submit" className="read-button" disabled={parentProfileSaving}>
+                {parentProfileSaving ? "Saving..." : "Save Profile"}
+              </button>
+            </form>
+
+            {parentProfileError && <p className="error-text parent-profile-error">{parentProfileError}</p>}
+            {parentProfileSuccess && <p className="parent-profile-success">{parentProfileSuccess}</p>}
+
+            <div className="parent-profile-divider" />
+
+            <form className="parent-password-form" onSubmit={handleParentPasswordSave}>
+              <label>
+                <span>Current Password</span>
+                <input
+                  type="password"
+                  value={parentPasswordForm.currentPassword}
+                  onChange={(event) => {
+                    setParentPasswordForm((current) => ({ ...current, currentPassword: event.target.value }));
+                    setParentPasswordError(null);
+                    setParentPasswordSuccess(null);
+                  }}
+                  minLength={8}
+                  maxLength={128}
+                  required
+                />
+              </label>
+              <label>
+                <span>New Password</span>
+                <input
+                  type="password"
+                  value={parentPasswordForm.newPassword}
+                  onChange={(event) => {
+                    setParentPasswordForm((current) => ({ ...current, newPassword: event.target.value }));
+                    setParentPasswordError(null);
+                    setParentPasswordSuccess(null);
+                  }}
+                  minLength={8}
+                  maxLength={128}
+                  required
+                />
+              </label>
+              <label>
+                <span>Confirm New Password</span>
+                <input
+                  type="password"
+                  value={parentPasswordForm.confirmPassword}
+                  onChange={(event) => {
+                    setParentPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }));
+                    setParentPasswordError(null);
+                    setParentPasswordSuccess(null);
+                  }}
+                  minLength={8}
+                  maxLength={128}
+                  required
+                />
+              </label>
+              <button type="submit" className="ghost-button" disabled={parentPasswordSaving}>
+                {parentPasswordSaving ? "Updating..." : "Update Password"}
+              </button>
+            </form>
+
+            {parentPasswordError && <p className="error-text parent-profile-error">{parentPasswordError}</p>}
+            {parentPasswordSuccess && <p className="parent-profile-success">{parentPasswordSuccess}</p>}
+          </section>
+        </div>
+      )}
 
       <section className="parent-child-management">
         <div className="parent-child-management-header">
@@ -594,17 +882,39 @@ function ParentPortal() {
               return (
                 <article key={child._id} className="parent-child-card">
                   <header>
-                    <div>
-                      <p className="story-language">Age {child.age}</p>
-                      <h3>{child.name}</h3>
+                    <div className="parent-child-header-main">
+                      <div className="parent-child-avatar">
+                        {child.avatarImageUrl?.trim() ? (
+                          <img src={child.avatarImageUrl} alt={`${child.name} avatar`} loading="lazy" />
+                        ) : (
+                          <span>{child.name.charAt(0).toUpperCase()}</span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="story-language">Age {child.age}</p>
+                        <h3>{child.name}</h3>
+                      </div>
                     </div>
                     <p className="story-meta">Daily limit: {child.dailyReadingLimitMinutes} min</p>
                   </header>
+                  <label className="parent-child-avatar-upload">
+                    <span>{uploadingChildAvatarId === child._id ? "Uploading picture..." : "Upload Child Picture"}</span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      disabled={isUpdating || isDeleting || uploadingChildAvatarId === child._id}
+                      onChange={(event) => {
+                        const selectedFile = event.target.files?.[0] ?? null;
+                        void handleChildAvatarUpload(child._id, selectedFile);
+                        event.target.value = "";
+                      }}
+                    />
+                  </label>
                   <button
                     type="button"
                     className="ghost-button"
                     onClick={() => void handleGeneratePairingCode(child._id)}
-                    disabled={pairingState?.loading || isUpdating || isDeleting}
+                    disabled={pairingState?.loading || isUpdating || isDeleting || uploadingChildAvatarId === child._id}
                   >
                     {pairingState?.loading ? "Generating code..." : "Generate 4-Digit Code"}
                   </button>
@@ -613,7 +923,7 @@ function ParentPortal() {
                       type="button"
                       className="ghost-button"
                       onClick={() => handleEditChildStart(child)}
-                      disabled={isUpdating || isDeleting}
+                      disabled={isUpdating || isDeleting || uploadingChildAvatarId === child._id}
                     >
                       {isEditing ? "Editing..." : "Edit Child"}
                     </button>
@@ -621,7 +931,7 @@ function ParentPortal() {
                       type="button"
                       className="ghost-button danger"
                       onClick={() => handleDeleteChildRequest(child._id)}
-                      disabled={isUpdating || isDeleting}
+                      disabled={isUpdating || isDeleting || uploadingChildAvatarId === child._id}
                     >
                       {isDeleting ? "Deleting..." : isDeleteConfirmOpen ? "Confirm Delete" : "Delete Child"}
                     </button>

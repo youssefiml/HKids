@@ -1,6 +1,7 @@
 import { Schema, model, Document } from "mongoose";
 
 export interface IParent extends Document {
+  fullName: string;
   email: string;
   password: string;
   isActive: boolean;
@@ -10,6 +11,12 @@ export interface IParent extends Document {
 
 const ParentSchema = new Schema<IParent>(
   {
+    fullName: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 100,
+    },
     email: {
       type: String,
       required: true,

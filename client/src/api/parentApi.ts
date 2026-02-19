@@ -1,7 +1,10 @@
 export interface ParentAccount {
   id: string;
+  fullName: string;
   email: string;
   isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ParentAuthPayload {
@@ -19,6 +22,7 @@ export interface UpdateParentChildInput {
   name?: string;
   age?: number;
   dailyReadingLimitMinutes?: number;
+  avatarImageUrl?: string;
 }
 
 export interface ParentChildProfile {
@@ -26,7 +30,18 @@ export interface ParentChildProfile {
   name: string;
   age: number;
   dailyReadingLimitMinutes: number;
+  avatarImageUrl?: string;
   isActive: boolean;
+}
+
+export interface UpdateParentProfileInput {
+  fullName?: string;
+  email?: string;
+}
+
+export interface UpdateParentPasswordInput {
+  currentPassword: string;
+  newPassword: string;
 }
 
 export interface ParentPairingCode {
@@ -154,6 +169,28 @@ export const getParentMe = async (token: string) => {
   return parentRequest<ParentAccount>("/api/parent/auth/me", { method: "GET" }, token);
 };
 
+export const updateParentMe = async (token: string, input: UpdateParentProfileInput) => {
+  return parentRequest<ParentAccount>(
+    "/api/parent/auth/me",
+    {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    },
+    token
+  );
+};
+
+export const updateParentPassword = async (token: string, input: UpdateParentPasswordInput) => {
+  return parentRequest<{ updated: true }>(
+    "/api/parent/auth/me/password",
+    {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    },
+    token
+  );
+};
+
 export const listParentChildren = async (token: string) => {
   return parentRequest<ParentChildProfile[]>("/api/parent/children", { method: "GET" }, token);
 };
@@ -186,6 +223,29 @@ export const updateParentChild = async (
 
 export const deleteParentChild = async (token: string, childProfileId: string) => {
   return parentRequest<ParentChildProfile>(`/api/parent/children/${childProfileId}`, { method: "DELETE" }, token);
+};
+
+export const uploadParentChildAvatar = async (token: string, childProfileId: string, file: File) => {
+  const lowerName = file.name.toLowerCase();
+  const fallbackType = lowerName.endsWith(".png")
+    ? "image/png"
+    : lowerName.endsWith(".webp")
+      ? "image/webp"
+      : lowerName.endsWith(".gif")
+        ? "image/gif"
+        : "image/jpeg";
+
+  const response = await fetch(`${API_BASE_URL}/api/parent/children/${childProfileId}/avatar`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+      "Content-Type": file.type || fallbackType,
+    },
+    body: file,
+  });
+
+  return parseResponse<ParentChildProfile>(response);
 };
 
 export const createParentPairingCode = async (

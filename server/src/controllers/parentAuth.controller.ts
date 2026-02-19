@@ -2,7 +2,13 @@ import { Request, Response, NextFunction } from "express";
 import { sendSuccess } from "../utils/response.util";
 import { AppError } from "../middlewares/error.middleware";
 import { ParentAuthRequest } from "../middlewares/parentAuth.middleware";
-import { getParentMe, loginParent, registerParent } from "../services/parentAuth.service";
+import {
+  getParentMe,
+  loginParent,
+  registerParent,
+  updateParentPassword,
+  updateParentProfile,
+} from "../services/parentAuth.service";
 
 export const parentRegisterController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -36,3 +42,31 @@ export const parentMeController = async (req: ParentAuthRequest, res: Response, 
   }
 };
 
+export const updateParentMeController = async (req: ParentAuthRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.parent?.id) {
+      throw new AppError("Parent authentication required", 401);
+    }
+    const parent = await updateParentProfile(req.parent.id, req.body);
+    sendSuccess(res, parent, "Parent profile updated");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateParentPasswordController = async (
+  req: ParentAuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.parent?.id) {
+      throw new AppError("Parent authentication required", 401);
+    }
+    const { currentPassword, newPassword } = req.body;
+    const result = await updateParentPassword(req.parent.id, currentPassword, newPassword);
+    sendSuccess(res, result, "Parent password updated");
+  } catch (error) {
+    next(error);
+  }
+};

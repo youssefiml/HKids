@@ -15,6 +15,25 @@ export const parentLoginSchema = z.object({
   password: z.string().min(8),
 });
 
+export const parentProfileUpdateSchema = z
+  .object({
+    fullName: z.string().trim().min(1).max(100).optional(),
+    email: z.string().trim().email().optional(),
+  })
+  .refine((payload) => Object.keys(payload).length > 0, {
+    message: "At least one field is required",
+  });
+
+export const parentPasswordUpdateSchema = z.object({
+  currentPassword: z.string().min(8).max(128),
+  newPassword: z
+    .string()
+    .min(8)
+    .max(128)
+    .regex(/[A-Za-z]/, "Password must include at least one letter")
+    .regex(/\d/, "Password must include at least one number"),
+});
+
 export const childProfileCreateSchema = z.object({
   name: z.string().trim().min(1).max(80),
   age: z.number().int().min(0).max(18),
@@ -24,6 +43,7 @@ export const childProfileCreateSchema = z.object({
 export const childProfileUpdateSchema = childProfileCreateSchema
   .partial()
   .extend({
+    avatarImageUrl: z.string().trim().url().or(z.literal("")).optional(),
     isActive: z.boolean().optional(),
   })
   .refine((payload) => Object.keys(payload).length > 0, {

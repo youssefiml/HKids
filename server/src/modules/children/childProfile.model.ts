@@ -5,6 +5,7 @@ export interface IChildProfile extends Document {
   name: string;
   age: number;
   dailyReadingLimitMinutes: number;
+  avatarImageUrl: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -37,6 +38,12 @@ const ChildProfileSchema = new Schema<IChildProfile>(
       min: 1,
       max: 24 * 60,
     },
+    avatarImageUrl: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 500,
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -49,4 +56,3 @@ const ChildProfileSchema = new Schema<IChildProfile>(
 ChildProfileSchema.index({ parent: 1, name: 1 });
 
 export const ChildProfile = model<IChildProfile>("ChildProfile", ChildProfileSchema);
-
