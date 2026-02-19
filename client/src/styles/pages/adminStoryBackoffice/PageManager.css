@@ -14,6 +14,57 @@
   color: #104369;
 }
 
+.story-page-pdf-import {
+  margin: 0 0 0.7rem;
+}
+
+.story-page-pdf-import label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.story-page-pdf-import span {
+  color: #20567f;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.story-page-pdf-import input[type="file"] {
+  width: 100%;
+  border: 1px dashed rgba(34, 95, 138, 0.35);
+  border-radius: 11px;
+  padding: 0.34rem;
+  font-family: inherit;
+  color: #12456e;
+  background: rgba(239, 248, 255, 0.75);
+}
+
+.story-page-pdf-import input[type="file"]::file-selector-button {
+  border: 0;
+  border-radius: 9px;
+  padding: 0.44rem 0.72rem;
+  margin-right: 0.62rem;
+  background: linear-gradient(130deg, #2dbef2, #1297d2);
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.story-page-pdf-import input[type="file"]::file-selector-button:hover {
+  filter: brightness(1.04);
+}
+
+.story-page-pdf-import input[type="file"]::-webkit-file-upload-button {
+  border: 0;
+  border-radius: 9px;
+  padding: 0.44rem 0.72rem;
+  margin-right: 0.62rem;
+  background: linear-gradient(130deg, #2dbef2, #1297d2);
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 .story-page-form-grid {
   display: grid;
   gap: 0.7rem;

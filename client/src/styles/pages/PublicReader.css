@@ -491,14 +491,37 @@
   margin-top: 0.9rem;
   border-radius: 14px;
   overflow: hidden;
-  background: #d8efff;
+  border: 1px solid rgba(28, 86, 127, 0.16);
+  background: linear-gradient(145deg, #f8fdff, #e6f4ff);
+  min-height: clamp(220px, 42vh, 430px);
+  display: grid;
+  place-items: center;
+  padding: 0.55rem;
 }
 
 .reader-page img {
   display: block;
   width: 100%;
   height: clamp(220px, 42vh, 430px);
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 12px;
+  background: #f4f9ff;
+}
+
+.reader-page-placeholder {
+  width: min(560px, 100%);
+  border-radius: 12px;
+  border: 2px dashed rgba(33, 93, 134, 0.28);
+  background: rgba(240, 248, 255, 0.82);
+  text-align: center;
+  padding: 1rem;
+}
+
+.reader-page-placeholder p {
+  margin: 0;
+  color: #1f5a84;
+  font-weight: 800;
 }
 
 .reader-text {

@@ -133,6 +133,10 @@ function PublicReader({ readerSession, onResetSession }: Props) {
   );
 
   const activePage = selectedBook?.pages[activePageIndex];
+  const activePageImageUrl = activePage?.imageUrl?.trim() ?? "";
+  const activePageText = activePage?.text?.trim() ?? "";
+  const activePageHasImage = Boolean(activePageImageUrl);
+  const activePageHasText = Boolean(activePageText);
   const totalPages = selectedBook?.pages.length ?? 0;
   const featuredBook = filteredBooks[0] ?? null;
   const storiesWithPages = filteredBooks.filter((book) => book.pages.length > 0).length;
@@ -388,9 +392,15 @@ function PublicReader({ readerSession, onResetSession }: Props) {
             {totalPages > 0 ? (
               <>
                 <div className="reader-page">
-                  <img src={activePage?.imageUrl} alt={`Page ${activePage?.pageNumber}`} />
+                  {activePageHasImage ? (
+                    <img src={activePageImageUrl} alt={`Page ${activePage?.pageNumber ?? activePageIndex + 1}`} />
+                  ) : (
+                    <div className="reader-page-placeholder">
+                      <p>{activePageHasText ? "Text-only page" : "Image not available on this page"}</p>
+                    </div>
+                  )}
                 </div>
-                <p className="reader-text">{activePage?.text || "Enjoy the artwork and imagine the scene."}</p>
+                {activePageHasText && <p className="reader-text">{activePageText}</p>}
                 <div className="reader-controls">
                   <button
                     type="button"

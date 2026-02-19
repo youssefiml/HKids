@@ -15,6 +15,7 @@ interface StoryCreatePanelProps {
   creatingStory: boolean;
   uploadingTarget: string | null;
   onImageUpload: (file: File, target: string, onSuccess: (url: string) => void) => Promise<void>;
+  onImportPdfPages: (file: File) => Promise<void>;
   onSubmit: (event: FormEvent) => void;
   onCancel: () => void;
 }
@@ -36,9 +37,12 @@ function StoryCreatePanel({
   creatingStory,
   uploadingTarget,
   onImageUpload,
+  onImportPdfPages,
   onSubmit,
   onCancel,
 }: StoryCreatePanelProps) {
+  const isImportingPdf = Boolean(uploadingTarget?.startsWith("import-pdf-create"));
+
   return (
     <section className="story-admin-create">
       <div className="story-admin-create-head">
@@ -139,6 +143,31 @@ function StoryCreatePanel({
             >
               Add Page Row
             </button>
+          </div>
+          <div className="story-create-pdf-import">
+            <label>
+              <span>Import PDF as initial pages</span>
+              <input
+                type="file"
+                accept=".pdf,application/pdf"
+                disabled={creatingStory || isImportingPdf}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) {
+                    return;
+                  }
+                  void onImportPdfPages(file);
+                  event.currentTarget.value = "";
+                }}
+              />
+              {isImportingPdf ? (
+                <small className="story-create-uploading-note">Importing PDF pages...</small>
+              ) : (
+                <small className="story-create-uploading-note">
+                  PDF pages will be converted to images and added in order.
+                </small>
+              )}
+            </label>
           </div>
           <p className="story-meta">
             Here you decide how many pages this story starts with and the style of each page.

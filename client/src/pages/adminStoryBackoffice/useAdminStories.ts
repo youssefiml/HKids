@@ -23,6 +23,7 @@ import {
   sortPages,
   validatePageByLayout,
 } from "./storyUtils";
+import { extractPdfPagesAsImages } from "../../utils/pdfImport";
 import type {
   BackofficeView,
   InitialPageDraft,
@@ -57,6 +58,9 @@ const DEFAULT_METADATA_FORM: StoryMetadataForm = {
   maxAge: 8,
   coverImageUrl: "",
 };
+
+const PDF_IMPORT_TARGET = "import-pdf";
+const PDF_CREATE_IMPORT_TARGET = "import-pdf-create";
 
 export function useAdminStories(token: string) {
   const [stories, setStories] = useState<AdminStory[]>([]);
@@ -167,6 +171,89 @@ export function useAdminStories(token: string) {
         setActionError(error instanceof Error ? error.message : "Failed to upload image.");
       } finally {
         setUploadingTarget((current) => (current === target ? null : current));
+      }
+    },
+    [token]
+  );
+
+  const handleImportPdfPages = useCallback(
+    async (file: File) => {
+      if (!selectedStoryId) {
+        setActionError("Select a story before importing a PDF.");
+        return;
+      }
+
+      setActionError(null);
+      setBusyStoryId(selectedStoryId);
+      setUploadingTarget(PDF_IMPORT_TARGET);
+
+      let importedCount = 0;
+
+      try {
+        const renderedPages = await extractPdfPagesAsImages(file);
+
+        for (let index = 0; index < renderedPages.length; index += 1) {
+          const renderedPage = renderedPages[index];
+          setUploadingTarget(`${PDF_IMPORT_TARGET}-${index + 1}-${renderedPages.length}`);
+
+          const uploaded = await uploadAdminStoryImage(renderedPage.file, token);
+          await addAdminStoryPage(
+            selectedStoryId,
+            {
+              imageUrl: uploaded.url,
+            },
+            token
+          );
+          importedCount += 1;
+        }
+
+        await loadStories();
+        await loadSelectedStory();
+      } catch (error) {
+        const baseMessage = error instanceof Error ? error.message : "Failed to import PDF pages.";
+        const message =
+          importedCount > 0 ? `${baseMessage} Imported ${importedCount} pages before stopping.` : baseMessage;
+        setActionError(message);
+      } finally {
+        setBusyStoryId(null);
+        setUploadingTarget((current) => (current?.startsWith(PDF_IMPORT_TARGET) ? null : current));
+      }
+    },
+    [selectedStoryId, token, loadStories, loadSelectedStory]
+  );
+
+  const handleImportCreatePdfPages = useCallback(
+    async (file: File) => {
+      setActionError(null);
+      setUploadingTarget(PDF_CREATE_IMPORT_TARGET);
+
+      let importedCount = 0;
+
+      try {
+        const renderedPages = await extractPdfPagesAsImages(file);
+
+        for (let index = 0; index < renderedPages.length; index += 1) {
+          const renderedPage = renderedPages[index];
+          setUploadingTarget(`${PDF_CREATE_IMPORT_TARGET}-${index + 1}-${renderedPages.length}`);
+
+          const uploaded = await uploadAdminStoryImage(renderedPage.file, token);
+          setCreatePages((current) => [
+            ...current,
+            {
+              layout: "image_only",
+              imageUrl: uploaded.url,
+              text: "",
+            },
+          ]);
+          importedCount += 1;
+        }
+      } catch (error) {
+        const baseMessage = error instanceof Error ? error.message : "Failed to import PDF pages.";
+        const message =
+          importedCount > 0 ? `${baseMessage} Imported ${importedCount} pages before stopping.` : baseMessage;
+        setActionError(message);
+      } finally {
+        setUploadingTarget((current) => (current?.startsWith(PDF_CREATE_IMPORT_TARGET) ? null : current));
       }
     },
     [token]
@@ -502,6 +589,8 @@ export function useAdminStories(token: string) {
     pages,
     refreshStories: loadStories,
     handleImageUpload,
+    handleImportPdfPages,
+    handleImportCreatePdfPages,
     handleCreateStory,
     handleSaveMetadata,
     handleAddPage,

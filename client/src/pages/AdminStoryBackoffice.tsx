@@ -51,6 +51,8 @@ function AdminStoryBackoffice({ token }: Props) {
     pages,
     refreshStories,
     handleImageUpload,
+    handleImportPdfPages,
+    handleImportCreatePdfPages,
     handleCreateStory,
     handleSaveMetadata,
     handleAddPage,
@@ -100,6 +102,7 @@ function AdminStoryBackoffice({ token }: Props) {
           creatingStory={creatingStory}
           uploadingTarget={uploadingTarget}
           onImageUpload={handleImageUpload}
+          onImportPdfPages={handleImportCreatePdfPages}
           onSubmit={handleCreateStory}
           onCancel={showManageView}
         />
@@ -143,6 +146,7 @@ function AdminStoryBackoffice({ token }: Props) {
               reorderingPages,
               busyPageId,
               onImageUpload: handleImageUpload,
+              onImportPdfPages: handleImportPdfPages,
               onAddPage: handleAddPage,
               onStartPageEdit: handleStartPageEdit,
               onSavePageEdit: handleSavePageEdit,

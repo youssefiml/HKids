@@ -20,6 +20,7 @@ export interface PageManagerProps {
   reorderingPages: boolean;
   busyPageId: string | null;
   onImageUpload: (file: File, target: string, onSuccess: (url: string) => void) => Promise<void>;
+  onImportPdfPages: (file: File) => Promise<void>;
   onAddPage: (event: FormEvent) => void;
   onStartPageEdit: (page: AdminStoryPage) => void;
   onSavePageEdit: (event: FormEvent) => void;
@@ -39,15 +40,42 @@ function PageManager({
   reorderingPages,
   busyPageId,
   onImageUpload,
+  onImportPdfPages,
   onAddPage,
   onStartPageEdit,
   onSavePageEdit,
   onMovePage,
   onDeletePage,
 }: PageManagerProps) {
+  const isImportingPdf = Boolean(uploadingTarget?.startsWith("import-pdf"));
+
   return (
     <section className="story-pages-panel">
       <h2>Pages Management</h2>
+      <div className="story-page-pdf-import">
+        <label>
+          <span>Import PDF as story pages</span>
+          <input
+            type="file"
+            accept=".pdf,application/pdf"
+            disabled={isImportingPdf || addingPage || savingPage || reorderingPages}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (!file) {
+                return;
+              }
+              void onImportPdfPages(file);
+              event.currentTarget.value = "";
+            }}
+          />
+          {isImportingPdf && <small className="story-page-uploading-note">Importing PDF pages...</small>}
+          {!isImportingPdf && (
+            <small className="story-page-uploading-note">
+              PDF pages will be converted to images and added in order.
+            </small>
+          )}
+        </label>
+      </div>
       <form className="story-page-form-grid" onSubmit={onAddPage}>
         <label>
           <span>Page Style</span>

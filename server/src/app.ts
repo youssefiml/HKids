@@ -26,17 +26,31 @@ const defaultLocalOrigins = [
   "http://127.0.0.1:3000",
 ];
 
+const normalizeOrigin = (value: string): string => {
+  const trimmed = value.trim().replace(/\/+$/, "");
+  if (!trimmed) return "";
+  try {
+    return new URL(trimmed).origin;
+  } catch {
+    return trimmed;
+  }
+};
+
 const envOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(",").map((u) => u.trim())
+  ? process.env.FRONTEND_URL.split(",").map((u) => normalizeOrigin(u))
   : [];
 
-const allowedOrigins = Array.from(new Set([...defaultLocalOrigins, ...envOrigins]));
+const allowedOrigins = new Set(
+  [...defaultLocalOrigins, ...envOrigins]
+    .map((origin) => normalizeOrigin(origin))
+    .filter(Boolean)
+);
 
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (e.g. Postman, server-to-server)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (allowedOrigins.has(normalizeOrigin(origin))) return callback(null, true);
     callback(null, false);
   },
   credentials: true,
