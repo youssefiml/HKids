@@ -160,6 +160,21 @@
   color: #161616;
 }
 
+.admin-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.admin-brand-logo .platform-logo-image {
+  width: clamp(120px, 17vw, 180px);
+}
+
+.admin-auth-logo .platform-logo-image {
+  width: clamp(150px, 20vw, 220px);
+}
+
 .brand-kicker {
   margin: 0;
   text-transform: uppercase;
@@ -192,6 +207,14 @@
   .admin-auth-brand {
     justify-content: center;
     text-align: center;
+  }
+
+  .admin-brand-row {
+    justify-content: center;
+  }
+
+  .admin-auth-logo {
+    justify-content: center;
   }
 
   .admin-auth-brand p {

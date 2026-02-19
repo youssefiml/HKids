@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
 import { claimReaderPairingCode, fetchReaderContext } from "../api/publicApi";
+import PlatformLogo from "../components/PlatformLogo";
 import PublicReader from "./PublicReader";
 import {
   clearStoredReaderSession,
@@ -150,6 +151,7 @@ function ChildReaderPortal() {
 
           <aside className="child-auth-brand">
             <div>
+              <PlatformLogo className="child-brand-logo" />
               <p className="hero-label">HKids Reader</p>
               <h3>Start Reading</h3>
               <p>Ask your parent for the 4-digit code, pair your device, and unlock your story world.</p>

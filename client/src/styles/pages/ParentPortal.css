@@ -97,6 +97,17 @@
   color: #113f67;
 }
 
+.parent-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.parent-brand-logo .platform-logo-image {
+  width: clamp(128px, 18vw, 195px);
+}
+
 .parent-auth-brand h3 {
   margin: 0.2rem 0 0;
   font-family: var(--font-title);
@@ -427,6 +438,10 @@
   .parent-auth-brand {
     justify-content: center;
     text-align: center;
+  }
+
+  .parent-brand-row {
+    justify-content: center;
   }
 
   .parent-auth-brand p {

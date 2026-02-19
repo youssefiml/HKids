@@ -7,6 +7,7 @@ import {
   logoutBackoffice,
 } from "../api/backofficeApi";
 import type { AuthUser } from "../api/backofficeApi";
+import PlatformLogo from "../components/PlatformLogo";
 import AdminStoryBackoffice from "./AdminStoryBackoffice";
 
 import "../styles/pages/BackofficeShell.css";
@@ -111,7 +112,10 @@ function BackofficeShell() {
         <>
           <header className="backoffice-header">
             <div>
-              <p className="hero-label">HKids Backoffice</p>
+              <div className="admin-brand-row">
+                <PlatformLogo className="admin-brand-logo" />
+                <p className="hero-label">HKids Backoffice</p>
+              </div>
               <h1>Admin Story Management</h1>
             </div>
             <div className="session-chip">
@@ -178,6 +182,7 @@ function BackofficeShell() {
 
           <aside className="admin-auth-brand" aria-label="HKids branding panel">
             <div>
+              <PlatformLogo className="admin-auth-logo" />
               <p className="brand-kicker">HKids</p>
               <h2>Admin Portal</h2>
               <p>Single entrypoint at /admin for the full backoffice flow.</p>

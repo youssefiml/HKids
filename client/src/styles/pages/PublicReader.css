@@ -76,6 +76,10 @@
   color: #113f67;
 }
 
+.child-brand-logo .platform-logo-image {
+  width: clamp(138px, 20vw, 200px);
+}
+
 .child-auth-brand h3 {
   margin: 0.2rem 0 0;
   font-family: var(--font-title);
@@ -98,6 +102,17 @@
   justify-content: space-between;
   gap: 0.55rem;
   flex-wrap: wrap;
+}
+
+.reader-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.reader-brand-logo .platform-logo-image {
+  width: clamp(120px, 18vw, 190px);
 }
 
 .sky-bubble {
@@ -593,6 +608,14 @@
   .child-auth-brand {
     justify-content: center;
     text-align: center;
+  }
+
+  .child-brand-logo {
+    justify-content: center;
+  }
+
+  .reader-brand-row {
+    justify-content: center;
   }
 
   .child-auth-brand p {

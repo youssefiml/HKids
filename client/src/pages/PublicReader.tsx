@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchPublicBooks, fetchPublicCategories } from "../api/publicApi";
 import type { BookLanguage, StoryBook, StoryCategory } from "../api/publicApi";
 import type { ReaderSession } from "../utils/readerSession";
+import PlatformLogo from "../components/PlatformLogo";
 import StoryCover from "./StoryCover";
 
 import "../styles/pages/PublicReader.css";
@@ -187,7 +188,10 @@ function PublicReader({ readerSession, onResetSession }: Props) {
               Switch Child
             </button>
           </div>
-          <p className="hero-label">HKids Reading Club</p>
+          <div className="reader-brand-row">
+            <PlatformLogo className="reader-brand-logo" />
+            <p className="hero-label">Reading Club</p>
+          </div>
           <h1>Read, Imagine, and Grow One Story at a Time</h1>
           <p className="hero-subtitle">
             A playful story library for children. Discover books, choose a language,

@@ -12,22 +12,24 @@ function App() {
 
   return (
     <div>
-      <nav className="mode-switch">
-        <button
-          type="button"
-          className={viewMode === "reader" ? "mode-button active" : "mode-button"}
-          onClick={() => setViewMode("reader")}
-        >
-          Child Reader
-        </button>
-        <button
-          type="button"
-          className={viewMode === "parent" ? "mode-button active" : "mode-button"}
-          onClick={() => setViewMode("parent")}
-        >
-          Parent Hub
-        </button>
-      </nav>
+      <div className="mode-switch-shell">
+        <nav className="mode-switch">
+          <button
+            type="button"
+            className={viewMode === "reader" ? "mode-button active" : "mode-button"}
+            onClick={() => setViewMode("reader")}
+          >
+            Child Reader
+          </button>
+          <button
+            type="button"
+            className={viewMode === "parent" ? "mode-button active" : "mode-button"}
+            onClick={() => setViewMode("parent")}
+          >
+            Parent Hub
+          </button>
+        </nav>
+      </div>
 
       {viewMode === "reader" && <ChildReaderPortal />}
       {viewMode === "parent" && <ParentPortal />}

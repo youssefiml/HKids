@@ -1,9 +1,11 @@
-.mode-switch {
-  position: sticky;
-  top: 0.75rem;
-  z-index: 30;
+.mode-switch-shell {
   width: fit-content;
   margin: 0.75rem auto 0;
+}
+
+.mode-switch {
+  width: fit-content;
+  margin: 0;
   padding: 0.34rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.88);

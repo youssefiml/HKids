@@ -25,7 +25,10 @@ function StoryListPanel({
 }: StoryListPanelProps) {
   return (
     <div className="story-list-panel">
-      <h2>Stories</h2>
+      <div className="story-list-panel-head">
+        <h2>Stories</h2>
+        {!storiesLoading && <span className="story-list-count">{stories.length}</span>}
+      </div>
       {storiesLoading && <div className="state-card">Loading stories...</div>}
       {!storiesLoading && stories.length === 0 && (
         <div className="state-card story-list-empty-state">
@@ -37,47 +40,83 @@ function StoryListPanel({
       )}
       {!storiesLoading && stories.length > 0 && (
         <ul className="story-admin-list">
-          {stories.map((story) => (
-            <li
-              key={story._id}
-              className={selectedStoryId === story._id ? "story-admin-card active" : "story-admin-card"}
-            >
-              <div className="story-admin-card-head">
-                <div>
-                  <p className="story-language">{story.language}</p>
-                  <h3>{story.title}</h3>
+          {stories.map((story) => {
+            const pageCount = story.pagesCount ?? story.pages?.length ?? 0;
+            const languageCode = story.language.toLowerCase();
+            const statusLabel = story.status === "published" ? "Published" : "Draft";
+
+            return (
+              <li
+                key={story._id}
+                className={selectedStoryId === story._id ? "story-admin-card active" : "story-admin-card"}
+              >
+                <div className="story-admin-card-top">
+                  <div className="story-admin-cover">
+                    {story.coverImageUrl?.trim() ? (
+                      <img src={story.coverImageUrl} alt={`${story.title} cover`} loading="lazy" />
+                    ) : (
+                      <span>{story.title.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+
+                  <div className="story-admin-card-content">
+                    <div className="story-admin-card-head">
+                      <div>
+                        <p className={`story-language story-language-tag ${languageCode}`}>
+                          {story.language.toUpperCase()}
+                        </p>
+                        <h3>{story.title}</h3>
+                      </div>
+                      <span className={story.status === "published" ? "status-pill published" : "status-pill draft"}>
+                        {statusLabel}
+                      </span>
+                    </div>
+
+                    <div className="story-admin-stats">
+                      <p className="story-admin-stat">
+                        Ages {story.minAge}-{story.maxAge}
+                      </p>
+                      <p className="story-admin-stat">Pages {pageCount}</p>
+                    </div>
+                  </div>
                 </div>
-                <span className={story.status === "published" ? "status-pill published" : "status-pill draft"}>
-                  {story.status}
-                </span>
-              </div>
-              <p className="story-meta">
-                Ages {story.minAge}-{story.maxAge}
-              </p>
-              <p className="story-meta">Pages: {story.pagesCount ?? story.pages?.length ?? 0}</p>
-              <div className="story-admin-card-actions">
-                <button type="button" className="ghost-button" onClick={() => onSelectStory(story._id)}>
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  className="read-button"
-                  onClick={() => onTogglePublish(story)}
-                  disabled={busyStoryId === story._id}
-                >
-                  {busyStoryId === story._id ? "Saving..." : story.status === "published" ? "Unpublish" : "Publish"}
-                </button>
-                <button
-                  type="button"
-                  className="ghost-button danger"
-                  onClick={() => onDeleteStory(story._id)}
-                  disabled={busyStoryId === story._id}
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          ))}
+
+                <div className="story-admin-card-actions">
+                  <button
+                    type="button"
+                    className="story-action-button edit"
+                    onClick={() => onSelectStory(story._id)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      story.status === "published"
+                        ? "story-action-button toggle unpublish"
+                        : "story-action-button toggle publish"
+                    }
+                    onClick={() => onTogglePublish(story)}
+                    disabled={busyStoryId === story._id}
+                  >
+                    {busyStoryId === story._id
+                      ? "Saving..."
+                      : story.status === "published"
+                        ? "Unpublish"
+                        : "Publish"}
+                  </button>
+                  <button
+                    type="button"
+                    className="story-action-button delete"
+                    onClick={() => onDeleteStory(story._id)}
+                    disabled={busyStoryId === story._id}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

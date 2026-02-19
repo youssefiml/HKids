@@ -18,6 +18,7 @@ import type {
   ParentWeeklyDigest,
   ParentWeeklyDigestChild,
 } from "../api/parentApi";
+import PlatformLogo from "../components/PlatformLogo";
 
 const PARENT_TOKEN_STORAGE_KEY = "hkids_parent_token";
 
@@ -482,7 +483,10 @@ function ParentPortal() {
 
           <aside className="parent-auth-brand">
             <div>
-              <p className="hero-label">HKids Parent Hub</p>
+              <div className="parent-brand-row">
+                <PlatformLogo className="parent-brand-logo" />
+                <p className="hero-label">Parent Hub</p>
+              </div>
               <h3>Family Access</h3>
               <p>Parents manage child profiles and create 4-digit reader pairing codes.</p>
             </div>
@@ -496,7 +500,10 @@ function ParentPortal() {
     <main className="parent-portal">
       <header className="backoffice-header">
         <div>
-          <p className="hero-label">HKids Parent Hub</p>
+          <div className="parent-brand-row">
+            <PlatformLogo className="parent-brand-logo" />
+            <p className="hero-label">Parent Hub</p>
+          </div>
           <h1>Parent-Owned Family Access</h1>
           <p className="parent-caption">
             Parent account controls child accounts, pairing access, and weekly reading digest.
