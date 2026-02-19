@@ -114,6 +114,21 @@ interface ApiErrorPayload {
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000").replace(/\/$/, "");
 
+const fileToDataUrl = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+      } else {
+        reject(new Error("Could not process image upload."));
+      }
+    };
+    reader.onerror = () => reject(new Error("Could not read image file."));
+    reader.readAsDataURL(file);
+  });
+};
+
 const parseResponse = async <T>(response: Response): Promise<T> => {
   const payload = (await response.json().catch(() => null)) as ApiSuccess<T> | ApiErrorPayload | null;
 
@@ -254,6 +269,11 @@ export const uploadParentChildAvatar = async (token: string, childProfileId: str
     },
     body: optimizedFile,
   });
+
+  if (response.status === 404) {
+    const avatarImageUrl = await fileToDataUrl(optimizedFile);
+    return updateParentChild(token, childProfileId, { avatarImageUrl });
+  }
 
   return parseResponse<ParentChildProfile>(response);
 };
