@@ -41,6 +41,8 @@
   padding: 0;
   list-style: none;
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  align-items: stretch;
   gap: 0.88rem;
 }
 
@@ -262,7 +264,27 @@
   }
 }
 
+@media (max-width: 700px) {
+  .story-admin-list {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(248px, 86%);
+    grid-template-columns: none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-bottom: 0.2rem;
+    scroll-snap-type: x mandatory;
+  }
+
+  .story-admin-card {
+    scroll-snap-align: start;
+  }
+}
+
 @media (max-width: 560px) {
+  .story-admin-list {
+    grid-auto-columns: minmax(234px, 88%);
+  }
+
   .story-admin-card-actions {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

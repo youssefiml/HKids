@@ -6,7 +6,7 @@
 .story-admin-layout {
   display: grid;
   gap: 0.9rem;
-  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  grid-template-columns: minmax(360px, 520px) minmax(0, 1fr);
   align-items: start;
 }
 
