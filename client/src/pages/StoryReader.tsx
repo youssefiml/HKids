@@ -75,6 +75,7 @@ function StoryReader() {
   const navigate = useNavigate();
   const readerSession = useMemo(() => getStoredReaderSession(), []);
   const preloadedImagesRef = useRef<Set<string>>(new Set());
+  const celebrationShownStoryIdRef = useRef<string | null>(null);
 
   const [story, setStory] = useState<Story | null>(null);
   const [pageCursor, setPageCursor] = useState(0);
@@ -83,6 +84,7 @@ function StoryReader() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [focusSecondsRemaining, setFocusSecondsRemaining] = useState(DEFAULT_FOCUS_SECONDS);
   const [sessionPaused, setSessionPaused] = useState(false);
+  const [showFinishCelebration, setShowFinishCelebration] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -95,6 +97,8 @@ function StoryReader() {
       setPageCursor(0);
       setFocusSecondsRemaining(DEFAULT_FOCUS_SECONDS);
       setSessionPaused(false);
+      setShowFinishCelebration(false);
+      celebrationShownStoryIdRef.current = null;
 
       if (!id) {
         if (!cancelled) {
@@ -136,6 +140,7 @@ function StoryReader() {
   }, [id, readerSession?.deviceId]);
 
   const totalPages = story?.pages.length ?? 0;
+  const maxPageIndex = Math.max(totalPages - 1, 0);
   const currentPage = useMemo(() => story?.pages[pageCursor], [story, pageCursor]);
   const currentPageHasImage = Boolean(currentPage?.hasImage);
   const currentPageHasText = Boolean(currentPage?.hasText);
@@ -178,6 +183,26 @@ function StoryReader() {
       window.clearInterval(interval);
     };
   }, [story, sessionPaused, focusSecondsRemaining]);
+
+  useEffect(() => {
+    if (!story || totalPages < 2 || pageCursor !== maxPageIndex) {
+      return;
+    }
+    if (celebrationShownStoryIdRef.current === story.id) {
+      return;
+    }
+
+    celebrationShownStoryIdRef.current = story.id;
+    setShowFinishCelebration(true);
+
+    const timeout = window.setTimeout(() => {
+      setShowFinishCelebration(false);
+    }, 2400);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [story, totalPages, pageCursor, maxPageIndex]);
 
   if (loading) {
     return (
@@ -231,10 +256,34 @@ function StoryReader() {
     );
   }
 
-  const maxPageIndex = Math.max(totalPages - 1, 0);
-
   return (
     <main className="story-reader-screen">
+      {showFinishCelebration && (
+        <div className="reader-finish-celebration" role="status" aria-live="polite">
+          <div className="reader-finish-card">
+            <span className="reader-finish-emoji" aria-hidden="true">
+              🎉
+            </span>
+            <p>Amazing! You finished the story!</p>
+          </div>
+          <span className="reader-finish-piece piece-1" aria-hidden="true">
+            ✨
+          </span>
+          <span className="reader-finish-piece piece-2" aria-hidden="true">
+            🎈
+          </span>
+          <span className="reader-finish-piece piece-3" aria-hidden="true">
+            ⭐
+          </span>
+          <span className="reader-finish-piece piece-4" aria-hidden="true">
+            🎊
+          </span>
+          <span className="reader-finish-piece piece-5" aria-hidden="true">
+            ✨
+          </span>
+        </div>
+      )}
+
       <header className="reader-topbar">
         <button type="button" className="reader-back-btn" onClick={() => navigate("/")}>
           Back

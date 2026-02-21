@@ -9,6 +9,114 @@
   overflow-x: hidden;
 }
 
+.reader-finish-celebration {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.reader-finish-card {
+  border-radius: 18px;
+  border: 2px solid rgba(255, 182, 62, 0.46);
+  background: linear-gradient(170deg, rgba(255, 251, 224, 0.97), rgba(255, 239, 174, 0.95));
+  box-shadow: 0 14px 34px rgba(145, 95, 20, 0.2);
+  padding: 0.78rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: readerCelebratePop 0.35s ease-out, readerCelebrateFade 2.4s ease forwards;
+}
+
+.reader-finish-emoji {
+  font-size: clamp(1.4rem, 4vw, 1.8rem);
+  line-height: 1;
+}
+
+.reader-finish-card p {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: clamp(0.95rem, 2.5vw, 1.08rem);
+  color: #6f4309;
+}
+
+.reader-finish-piece {
+  position: absolute;
+  font-size: clamp(1rem, 2.6vw, 1.4rem);
+  opacity: 0;
+  animation: readerCelebratePiece 2.2s ease-out forwards;
+}
+
+.reader-finish-piece.piece-1 {
+  top: 22%;
+  left: 32%;
+  animation-delay: 0s;
+}
+
+.reader-finish-piece.piece-2 {
+  top: 24%;
+  right: 30%;
+  animation-delay: 0.1s;
+}
+
+.reader-finish-piece.piece-3 {
+  top: 64%;
+  left: 28%;
+  animation-delay: 0.18s;
+}
+
+.reader-finish-piece.piece-4 {
+  top: 62%;
+  right: 27%;
+  animation-delay: 0.24s;
+}
+
+.reader-finish-piece.piece-5 {
+  top: 17%;
+  left: 50%;
+  animation-delay: 0.07s;
+}
+
+@keyframes readerCelebratePop {
+  0% {
+    transform: scale(0.78);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes readerCelebrateFade {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  82% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes readerCelebratePiece {
+  0% {
+    transform: translateY(8px) scale(0.8);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-42px) scale(1.08);
+    opacity: 0;
+  }
+}
+
 .reader-topbar {
   width: min(1080px, 100%);
   margin: 0 auto;
@@ -340,5 +448,12 @@
 
   .reader-stage img {
     max-height: 42vh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reader-finish-card,
+  .reader-finish-piece {
+    animation: none;
   }
 }
