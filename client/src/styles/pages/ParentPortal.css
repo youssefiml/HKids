@@ -181,6 +181,56 @@
   cursor: pointer;
 }
 
+.parent-pairing-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 72;
+  background: rgba(15, 36, 56, 0.62);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.parent-pairing-modal {
+  width: min(420px, 100%);
+  border-radius: 20px;
+  border: 1px solid rgba(29, 87, 128, 0.2);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 225, 147, 0.34), transparent 38%),
+    linear-gradient(165deg, #ffffff, #edf8ff);
+  box-shadow: 0 24px 52px rgba(15, 39, 62, 0.38);
+  padding: 1rem;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.parent-pairing-modal-child {
+  margin: 0;
+  color: #205f87;
+  font-size: 0.9rem;
+}
+
+.parent-pairing-modal-code {
+  border-radius: 16px;
+  border: 2px dashed rgba(27, 84, 126, 0.35);
+  background: rgba(233, 247, 255, 0.8);
+  color: #12456f;
+  text-align: center;
+  font-family: var(--font-title);
+  font-size: clamp(2rem, 9vw, 2.7rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  padding: 0.8rem 0.5rem;
+}
+
+.parent-pairing-modal-expiry {
+  margin: 0;
+  color: #2f6188;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 .parent-profile-form {
   display: grid;
   gap: 0.65rem;
@@ -634,6 +684,15 @@
   .parent-profile-modal-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .parent-pairing-modal-overlay {
+    padding: 0.72rem;
+  }
+
+  .parent-pairing-modal {
+    border-radius: 16px;
+    padding: 0.82rem;
   }
 
   .parent-profile-form {

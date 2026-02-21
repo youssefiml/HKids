@@ -34,6 +34,13 @@ type PairingUiState = {
   expiresAt: string | null;
 };
 
+type PairingCodeModalState = {
+  childProfileId: string;
+  childName: string;
+  code: string;
+  expiresAt: string | null;
+};
+
 const trendLabelMap: Record<ParentWeeklyDigestChild["trend"], string> = {
   up: "Trending Up",
   down: "Needs Support",
@@ -75,6 +82,7 @@ function ParentPortal() {
   const [parentPasswordError, setParentPasswordError] = useState<string | null>(null);
   const [parentPasswordSuccess, setParentPasswordSuccess] = useState<string | null>(null);
   const [isParentProfileModalOpen, setIsParentProfileModalOpen] = useState(false);
+  const [pairingCodeModal, setPairingCodeModal] = useState<PairingCodeModalState | null>(null);
 
   const [children, setChildren] = useState<ParentChildProfile[]>([]);
   const [childrenLoading, setChildrenLoading] = useState(false);
@@ -165,12 +173,16 @@ function ParentPortal() {
   }, [parent]);
 
   useEffect(() => {
-    if (!isParentProfileModalOpen) {
+    if (!isParentProfileModalOpen && !pairingCodeModal) {
       return;
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        if (pairingCodeModal) {
+          setPairingCodeModal(null);
+          return;
+        }
         setIsParentProfileModalOpen(false);
       }
     };
@@ -183,7 +195,7 @@ function ParentPortal() {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [isParentProfileModalOpen]);
+  }, [isParentProfileModalOpen, pairingCodeModal]);
 
   const loadChildren = useCallback(async () => {
     if (!token || !parent) {
@@ -299,6 +311,7 @@ function ParentPortal() {
       confirmPassword: "",
     });
     setIsParentProfileModalOpen(false);
+    setPairingCodeModal(null);
   };
 
   const handleOpenParentProfileModal = () => {
@@ -311,6 +324,10 @@ function ParentPortal() {
 
   const handleCloseParentProfileModal = () => {
     setIsParentProfileModalOpen(false);
+  };
+
+  const handleClosePairingCodeModal = () => {
+    setPairingCodeModal(null);
   };
 
   const handleParentProfileSave = async (event: FormEvent) => {
@@ -433,11 +450,12 @@ function ParentPortal() {
     }
   };
 
-  const handleGeneratePairingCode = async (childProfileId: string) => {
+  const handleGeneratePairingCode = async (child: ParentChildProfile) => {
     if (!token || !parent) {
       return;
     }
 
+    const childProfileId = child._id;
     setPairingStateByChildId((current) => ({
       ...current,
       [childProfileId]: {
@@ -459,6 +477,12 @@ function ParentPortal() {
           expiresAt: pairing.expiresAt,
         },
       }));
+      setPairingCodeModal({
+        childProfileId,
+        childName: child.name,
+        code: pairing.code,
+        expiresAt: pairing.expiresAt,
+      });
     } catch (error) {
       setPairingStateByChildId((current) => ({
         ...current,
@@ -546,6 +570,9 @@ function ParentPortal() {
         delete next[child._id];
         return next;
       });
+      setPairingCodeModal((current) =>
+        current && current.childProfileId === child._id ? null : current
+      );
       if (editingChildId === child._id) {
         setEditingChildId(null);
       }
@@ -561,6 +588,10 @@ function ParentPortal() {
       setDeletingChildId(null);
     }
   };
+
+  const pairingCodeExpiresLabel = pairingCodeModal?.expiresAt
+    ? new Date(pairingCodeModal.expiresAt).toLocaleString()
+    : null;
 
   if (!token || !parent) {
     return (
@@ -806,6 +837,38 @@ function ParentPortal() {
         </div>
       )}
 
+      {pairingCodeModal && (
+        <div
+          className="parent-pairing-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Generated pairing code"
+          onClick={handleClosePairingCodeModal}
+        >
+          <section className="parent-pairing-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="parent-profile-modal-head">
+              <div>
+                <h2>4-Digit Pairing Code</h2>
+                <p>Use this code on Child Reader to pair the device.</p>
+              </div>
+              <button type="button" className="parent-profile-modal-close" onClick={handleClosePairingCodeModal}>
+                Close
+              </button>
+            </div>
+            <p className="parent-pairing-modal-child">
+              Child: <strong>{pairingCodeModal.childName}</strong>
+            </p>
+            <div className="parent-pairing-modal-code" aria-live="assertive">
+              {pairingCodeModal.code}
+            </div>
+            {pairingCodeExpiresLabel && <p className="parent-pairing-modal-expiry">Expires: {pairingCodeExpiresLabel}</p>}
+            <button type="button" className="read-button" onClick={handleClosePairingCodeModal}>
+              Done
+            </button>
+          </section>
+        </div>
+      )}
+
       <section className="parent-child-management">
         <div className="parent-child-management-header">
           <h2>Child Accounts</h2>
@@ -870,9 +933,6 @@ function ParentPortal() {
           <div className="parent-child-list">
             {children.map((child) => {
               const pairingState = pairingStateByChildId[child._id];
-              const expiresLabel = pairingState?.expiresAt
-                ? new Date(pairingState.expiresAt).toLocaleString()
-                : null;
               const isEditing = editingChildId === child._id;
               const isUpdating = updatingChildId === child._id;
               const isDeleting = deletingChildId === child._id;
@@ -913,7 +973,7 @@ function ParentPortal() {
                   <button
                     type="button"
                     className="ghost-button"
-                    onClick={() => void handleGeneratePairingCode(child._id)}
+                    onClick={() => void handleGeneratePairingCode(child)}
                     disabled={pairingState?.loading || isUpdating || isDeleting || uploadingChildAvatarId === child._id}
                   >
                     {pairingState?.loading ? "Generating code..." : "Generate 4-Digit Code"}
@@ -1027,12 +1087,6 @@ function ParentPortal() {
                   )}
                   {childActionError && <p className="error-text">{childActionError}</p>}
                   {pairingState?.error && <p className="error-text">{pairingState.error}</p>}
-                  {pairingState?.code && (
-                    <p className="parent-pairing-code">
-                      Code: <strong>{pairingState.code}</strong>
-                      {expiresLabel ? ` (expires ${expiresLabel})` : ""}
-                    </p>
-                  )}
                 </article>
               );
             })}
