@@ -14,6 +14,7 @@ import {
 } from "../middlewares/readerGuard.middleware";
 import { validate } from "../utils/validation.util";
 import { claimPairingCodeSchema, consumeReaderUsageSchema } from "../utils/parentValidation.util";
+import { protect } from "../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -30,7 +31,7 @@ router.post(
   consumeReaderUsageController
 );
 router.get("/books", requirePairedReaderDevice, applyReaderAgeFilter, getBooksController);
-router.get("/books/:id", requirePairedReaderDevice, enforceReaderDailyLimit, getBookByIdController);
+router.get("/books/:id", requirePairedReaderDevice, enforceReaderDailyLimit, getBookByIdController, protect);
 router.get("/categories", requirePairedReaderDevice, getCategoriesController);
 
 export default router;
